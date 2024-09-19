@@ -23,6 +23,8 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+    implementation("org.pcap4j:pcap4j-core:1.+")
+    implementation("org.pcap4j:pcap4j-packetfactory-static:1.+")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
