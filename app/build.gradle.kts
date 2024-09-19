@@ -37,6 +37,14 @@ application {
     mainClass = "org.example.App"
 }
 
+tasks.jar.configure {
+    manifest {
+        attributes(mapOf("Main-Class" to "org.example.App"))
+    }
+    from(configurations.runtimeClasspath.get().map(::zipTree))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
