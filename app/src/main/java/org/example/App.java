@@ -32,6 +32,12 @@ public class App {
             return;
         }
 
+        // Print help dialog if requested by user
+        if (commandLine.hasOption("h")) {
+            displayHelp();
+            return;
+        }
+
         // Print list of network interfaces if requested by user
         if (commandLine.hasOption("l")) {
             try {
@@ -40,11 +46,6 @@ public class App {
                 System.err.println("Listing network interfaces failed: " + exception.getMessage());
                 return;
             }
-        }
-
-        // Print help dialog if requested by user
-        if (commandLine.hasOption("h")) {
-            displayHelp();
         }
 
         // Parse command line arguments with required options
