@@ -23,6 +23,7 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+    implementation("commons-cli:commons-cli:1.+")
     implementation("org.pcap4j:pcap4j-core:1.+")
     implementation("org.pcap4j:pcap4j-packetfactory-static:1.+")
 }
