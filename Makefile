@@ -1,7 +1,8 @@
-jre = $(shell readlink $(shell which java))
+jre := $(shell readlink $(shell which java))
 fatjar = app/build/libs/app.jar
+sources := $(shell find app/src -type f)
 
-$(fatjar):
+$(fatjar): $(sources)
 	gradle jar
 
 package: $(fatjar)
