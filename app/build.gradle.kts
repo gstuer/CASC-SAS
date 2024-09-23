@@ -26,6 +26,7 @@ dependencies {
     implementation("commons-cli:commons-cli:1.+")
     implementation("org.pcap4j:pcap4j-core:1.+")
     implementation("org.pcap4j:pcap4j-packetfactory-static:1.+")
+    implementation("org.slf4j:slf4j-simple:2+")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

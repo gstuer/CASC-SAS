@@ -18,9 +18,14 @@ import java.util.List;
 public class App {
     public static void main(String[] args) {
         System.out.println("IP/PEP - Intrusion Prevention & Policy Enforcement Point");
+
+        // Configure SLF4J logging verbosity
+        System.setProperty("slf4j.internal.verbosity", "WARN");
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "WARN");
+
+        // Parse command line arguments without required options to avoid help dialog not being printed in case of missing arguments
         CommandLine commandLine;
         try {
-            // Parse without required options to avoid help dialog not being printed in case of missing arguments
             commandLine = parseCommandLine(args, false);
         } catch (ParseException exception) {
             System.err.println(exception.getMessage());
@@ -42,8 +47,8 @@ public class App {
             displayHelp();
         }
 
+        // Parse command line arguments with required options
         try {
-            // Parse with required options
             commandLine = parseCommandLine(args, true);
         } catch (ParseException exception) {
             System.err.println(exception.getMessage());
