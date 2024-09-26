@@ -1,6 +1,9 @@
 package com.gstuer.casc.pep.forwarding;
 
-import org.pcap4j.core.*;
+import org.pcap4j.core.NotOpenException;
+import org.pcap4j.core.PcapHandle;
+import org.pcap4j.core.PcapNativeException;
+import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
 
@@ -55,37 +58,6 @@ public class ForwardingBridge {
         this.threadPool.shutdownNow();
     }
 
-    private void handleIngress() {
-        UnfilteredForwardingListener listener = new UnfilteredForwardingListener(this.egressQueue);
-        try {
-            this.ingressHandle.loop(-1, listener);
-        } catch (InterruptedException exception) {
-            //No handling required: Interrupted via breakloop() method call
-        } catch (NotOpenException | PcapNativeException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-
-    private void handleEgress() {
-        while(this.egressHandle.isOpen()) {
-            Packet packet;
-            try {
-                packet = this.egressQueue.take();
-            } catch (InterruptedException exception) {
-                break;
-            }
-
-            EthernetPacket.EthernetHeader header = (EthernetPacket.EthernetHeader) packet.getHeader();
-            try {
-                this.egressHandle.sendPacket(packet);
-                // TODO Remove system.out call
-                System.out.printf("%s -> %s: %s to %s\n", this.ingressInterface.getName(), this.egressInterface.getName(), header.getSrcAddr(), header.getDstAddr());
-            } catch (NotOpenException | PcapNativeException exception) {
-                throw new IllegalStateException(exception);
-            }
-        }
-    }
-
     private static PcapHandle buildIngressHandle(PcapNetworkInterface networkInterface) throws PcapNativeException {
         return new PcapHandle.Builder(networkInterface.getName())
                 .promiscuousMode(PcapNetworkInterface.PromiscuousMode.PROMISCUOUS)
@@ -100,5 +72,36 @@ public class ForwardingBridge {
                 .immediateMode(true)
                 .direction(PcapHandle.PcapDirection.OUT)
                 .build();
+    }
+
+    private void handleIngress() {
+        UnfilteredForwardingListener listener = new UnfilteredForwardingListener(this.egressQueue);
+        try {
+            this.ingressHandle.loop(-1, listener);
+        } catch (InterruptedException exception) {
+            //No handling required: Interrupted via breakloop() method call
+        } catch (NotOpenException | PcapNativeException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private void handleEgress() {
+        while (this.egressHandle.isOpen()) {
+            Packet packet;
+            try {
+                packet = this.egressQueue.take();
+            } catch (InterruptedException exception) {
+                break;
+            }
+
+            EthernetPacket.EthernetHeader header = (EthernetPacket.EthernetHeader) packet.getHeader();
+            try {
+                System.out.printf("[Forward] %s -> %s (%d Bytes): %s to %s (%d Packets waiting)\n", this.ingressInterface.getName(), this.egressInterface.getName(), packet.length(), header.getSrcAddr(), header.getDstAddr(), this.egressQueue.size());
+                this.egressHandle.sendPacket(packet);
+            } catch (NotOpenException | PcapNativeException exception) {
+                // Throw no exception to continue sending after exception
+                System.err.println(exception.getMessage());
+            }
+        }
     }
 }
