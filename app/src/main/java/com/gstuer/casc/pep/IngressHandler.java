@@ -1,29 +1,22 @@
 package com.gstuer.casc.pep;
 
-import com.gstuer.casc.pep.forwarding.UnfilteredForwardingListener;
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
-import org.pcap4j.packet.Packet;
 
 import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
 
 public class IngressHandler {
     private final PcapNetworkInterface ingressInterface;
     private final PcapHandle ingressHandle;
-    private final BlockingQueue<Packet> egressQueue;
+    private final PacketListener packetListener;
 
-    public IngressHandler(PcapNetworkInterface ingressInterface, BlockingQueue<Packet> egressQueue) throws PcapNativeException {
+    public IngressHandler(PcapNetworkInterface ingressInterface, PacketListener packetListener) throws PcapNativeException {
         this.ingressInterface = Objects.requireNonNull(ingressInterface);
         this.ingressHandle = buildHandle(ingressInterface);
-        this.egressQueue = Objects.requireNonNull(egressQueue);
-    }
-
-    public void handle() {
-        this.handle(getPacketListener());
+        this.packetListener = Objects.requireNonNull(packetListener);
     }
 
     public void close() {
@@ -35,10 +28,10 @@ public class IngressHandler {
         this.ingressHandle.close();
     }
 
-    protected void handle(PacketListener packetListener) {
+    public void handle() {
         try {
             // Handle packets until interrupted or exception is thrown
-            this.ingressHandle.loop(-1, packetListener);
+            this.ingressHandle.loop(-1, this.packetListener);
         } catch (InterruptedException exception) {
             //No handling required: e.g. interrupted via breakloop() method call
         } catch (NotOpenException | PcapNativeException exception) {
@@ -53,9 +46,5 @@ public class IngressHandler {
                 .immediateMode(true)
                 .direction(PcapHandle.PcapDirection.IN)
                 .build();
-    }
-
-    protected PacketListener getPacketListener() {
-        return new UnfilteredForwardingListener(this.egressQueue);
     }
 }

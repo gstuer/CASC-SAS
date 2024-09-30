@@ -35,7 +35,7 @@ public class ForwardingBridge {
 
         // Construct packet capture handlers for ingress & egress
         try {
-            ingressHandler = new IngressHandler(this.ingressInterface, this.egressQueue);
+            ingressHandler = new IngressHandler(this.ingressInterface, new UnfilteredForwardingListener(this.egressQueue));
             egressHandler = new EgressHandler(this.egressInterface, this.egressQueue);
         } catch (PcapNativeException exception) {
             throw new IllegalStateException(exception);
