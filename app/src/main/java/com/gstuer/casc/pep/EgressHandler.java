@@ -4,7 +4,6 @@ import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
-import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
 
 import java.util.Objects;
@@ -34,9 +33,7 @@ public class EgressHandler {
                 break;
             }
 
-            EthernetPacket.EthernetHeader header = (EthernetPacket.EthernetHeader) packet.getHeader();
             try {
-                System.out.printf("[Egress %s] (%d Bytes): %s to %s (%d Packets waiting)\n", this.egressInterface.getName(), packet.length(), header.getSrcAddr(), header.getDstAddr(), this.egressQueue.size());
                 this.egressHandle.sendPacket(packet);
             } catch (NotOpenException | PcapNativeException exception) {
                 // Throw no exception to continue sending after exception
