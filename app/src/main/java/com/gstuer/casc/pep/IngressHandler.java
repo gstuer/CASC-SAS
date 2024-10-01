@@ -5,8 +5,10 @@ import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
+import org.pcap4j.packet.Packet;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class IngressHandler {
     private final PcapNetworkInterface ingressInterface;
@@ -17,6 +19,10 @@ public class IngressHandler {
         this.ingressInterface = Objects.requireNonNull(ingressInterface);
         this.ingressHandle = buildHandle(ingressInterface);
         this.packetListener = Objects.requireNonNull(packetListener);
+    }
+
+    public IngressHandler(PcapNetworkInterface ingressInterface, Consumer<Packet> packetConsumer) throws PcapNativeException {
+        this(ingressInterface, createFromPacketConsumer(packetConsumer));
     }
 
     public void close() {
@@ -38,6 +44,10 @@ public class IngressHandler {
             throw new IllegalStateException(exception);
         }
         System.out.printf("[Ingress %s] Handler closed.\n", this.ingressInterface.getName());
+    }
+
+    private static PacketListener createFromPacketConsumer(Consumer<Packet> consumer) {
+        return consumer::accept;
     }
 
     protected PcapHandle buildHandle(PcapNetworkInterface networkInterface) throws PcapNativeException {
