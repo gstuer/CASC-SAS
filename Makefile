@@ -13,6 +13,10 @@ run: $(fatjar)
 clean:
 	gradle clean
 
+deploy: package
+	scp -r $(fatjar) pi@strawberry:~/ || scp -r $(fatjar) pi@192.168.0.60:~/
+	scp -r $(fatjar) pi@cranberry:~/ || scp -r $(fatjar) pi@192.168.0.61:~/
+
 capabilities_set:
 	sudo setcap cap_net_raw,cap_net_admin=eip $(jre)
 
