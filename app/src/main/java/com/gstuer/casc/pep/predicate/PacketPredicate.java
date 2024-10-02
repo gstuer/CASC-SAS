@@ -20,6 +20,12 @@ public abstract class PacketPredicate implements Predicate<Packet> {
         };
     }
 
+    /**
+     * Constructs a {@link PacketPredicate} from a {@link Predicate Predicate&lt;Packet&gt;} instance.
+     *
+     * @param predicate the original predicate
+     * @return a new {@link PacketPredicate}
+     */
     public static PacketPredicate from(Predicate<Packet> predicate) {
         return new PacketPredicate() {
             @Override
@@ -30,7 +36,7 @@ public abstract class PacketPredicate implements Predicate<Packet> {
     }
 
     /**
-     * Applies a {@link Consumer consumer} on a {@link Packet packet}, if the packet matches this predicate
+     * Applies a {@link Consumer consumer} on a {@link Packet packet} if the packet matches this predicate.
      *
      * @param packet   the tested and potentially consumed packet
      * @param consumer the packet-consuming void-returning operation
@@ -42,7 +48,23 @@ public abstract class PacketPredicate implements Predicate<Packet> {
     }
 
     /**
-     * Applies a {@link Function function} on a {@link Packet packet}, if the packet matches this predicate
+     * Applies a {@link Consumer consumer} on a {@link Packet packet} if the packet matches this predicate,
+     * applies an alternative consumer otherwise.
+     *
+     * @param packet           the tested and consumed packet
+     * @param matchConsumer    the packet-consuming void-returning operation applied in case of a match
+     * @param mismatchConsumer the packet-consuming void-returning operation applied in case of a mismatch
+     */
+    public void doIfMatchesOrElse(Packet packet, Consumer<Packet> matchConsumer, Consumer<Packet> mismatchConsumer) {
+        if (this.test(packet)) {
+            matchConsumer.accept(packet);
+        } else {
+            mismatchConsumer.accept(packet);
+        }
+    }
+
+    /**
+     * Applies a {@link Function function} on a {@link Packet packet}, if the packet matches this predicate.
      *
      * @param packet   the tested and potentially consumed packet
      * @param function the packet-consuming function
