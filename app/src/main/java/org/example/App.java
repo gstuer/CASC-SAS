@@ -1,6 +1,9 @@
 package org.example;
 
+import com.gstuer.casc.pep.NetworkBridge;
 import com.gstuer.casc.pep.forwarding.ForwardingBridge;
+import com.gstuer.casc.pep.predicate.ArpPredicate;
+import com.gstuer.casc.pep.predicate.IcmpV4Predicate;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -69,13 +72,20 @@ public class App {
             return;
         }
 
-        ForwardingBridge inBridge = new ForwardingBridge(insecureNetworkInterface, secureNetworkInterface);
-        ForwardingBridge outBridge = new ForwardingBridge(secureNetworkInterface, insecureNetworkInterface);
-
-        System.out.println("Start Bridge: " + insecureNetworkInterface.getName() + "->" + secureNetworkInterface.getName());
-        inBridge.startForwarding();
-        System.out.println("Start Bridge: " + secureNetworkInterface.getName() + "->" + insecureNetworkInterface.getName());
-        outBridge.startForwarding();
+        if (commandLine.hasOption("f")) {
+            // Start forwarding traffic between the specified interfaces w/o access control
+            System.out.printf("Forward Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
+            ForwardingBridge inBridge = new ForwardingBridge(insecureNetworkInterface, secureNetworkInterface);
+            ForwardingBridge outBridge = new ForwardingBridge(secureNetworkInterface, insecureNetworkInterface);
+            inBridge.startForwarding();
+            outBridge.startForwarding();
+        } else {
+            // Start forwarding traffic between the specified interfaces using a secured network bridge instance
+            System.out.printf("Supervisory Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
+            NetworkBridge networkBridge = new NetworkBridge(insecureNetworkInterface, secureNetworkInterface,
+                    new ArpPredicate(), new IcmpV4Predicate());
+            networkBridge.open();
+        }
     }
 
     private static void displayHelp() {
@@ -114,6 +124,10 @@ public class App {
                 .numberOfArgs(1)
                 .argName("interface")
                 .required(enableRequiredOptions)
+                .build());
+        options.addOption(Option.builder("f")
+                .longOpt("forward")
+                .desc("forwards all traffic without filtering and access control")
                 .build());
         options.addOption(Option.builder("l")
                 .longOpt("list")
