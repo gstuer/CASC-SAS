@@ -22,7 +22,6 @@ public class JsonProcessor {
             builder.setPrettyPrinting();
         }
         builder.registerTypeAdapter(Packet.class, new PacketSerializer());
-        builder.registerTypeAdapter(Packet.class, new PacketDeserializer());
         this.gson = builder.create();
     }
 
