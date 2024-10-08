@@ -6,13 +6,14 @@ import com.gstuer.casc.pep.serialization.SerializationException;
 import org.pcap4j.packet.Packet;
 
 import java.io.Serial;
+import java.net.InetAddress;
 
 public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
     @Serial
     private static final long serialVersionUID = 5060347937847810073L;
 
-    public PayloadExchangeMessage(DigitalSignature signature, Packet packet) {
-        super(signature, packet);
+    public PayloadExchangeMessage(InetAddress destination, DigitalSignature signature, Packet packet) {
+        super(destination, signature, packet);
     }
 
     @Override
