@@ -40,7 +40,7 @@ public class JsonProcessor {
         try {
             return this.gson.toJson(object);
         } catch (JsonParseException exception) {
-            throw new SerializationException(exception.getCause());
+            throw new SerializationException(exception);
         }
     }
 
@@ -48,7 +48,7 @@ public class JsonProcessor {
         try {
             return this.gson.fromJson(json, objectClass);
         } catch (JsonParseException exception) {
-            throw new SerializationException(exception.getCause());
+            throw new SerializationException(exception);
         }
     }
 
