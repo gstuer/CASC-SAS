@@ -3,6 +3,8 @@ package com.gstuer.casc.pep.serialization;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.gstuer.casc.pep.access.AccessControlMessage;
+import com.gstuer.casc.pep.access.PayloadExchangeMessage;
 import org.pcap4j.packet.Packet;
 
 import java.nio.charset.Charset;
@@ -18,10 +20,19 @@ public class JsonProcessor {
 
     public JsonProcessor(boolean prettyPrinting) {
         GsonBuilder builder = new GsonBuilder();
+
+        // Enable pretty printing for debugging purposes
         if (prettyPrinting) {
             builder.setPrettyPrinting();
         }
+
+        // Register custom type adapters to serialize/deserialize objects correctly
         builder.registerTypeAdapter(Packet.class, new PacketSerializer());
+        RuntimeTypeAdapterFactory<?> messageAdapterFactory = RuntimeTypeAdapterFactory
+                .of(AccessControlMessage.class)
+                .registerSubtype(PayloadExchangeMessage.class)
+                .recognizeSubtypes();
+        builder.registerTypeAdapterFactory(messageAdapterFactory);
         this.gson = builder.create();
     }
 
