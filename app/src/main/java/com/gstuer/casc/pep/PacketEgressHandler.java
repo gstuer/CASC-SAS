@@ -20,7 +20,7 @@ public class PacketEgressHandler extends EgressHandler<Packet> {
     }
 
     @Override
-    public void handle() {
+    public void open() {
         if (!this.egressHandle.isOpen()) {
             throw new IllegalStateException("Closed handler cannot be reopened.");
         }
@@ -32,15 +32,19 @@ public class PacketEgressHandler extends EgressHandler<Packet> {
                 // Handler interrupted during waiting for new packet
                 break;
             }
-
-            try {
-                this.egressHandle.sendPacket(packet);
-            } catch (NotOpenException | PcapNativeException exception) {
-                // Throw no exception to continue sending after exception
-                System.err.println(exception.getMessage());
-            }
+            this.handle(packet);
         }
         System.out.printf("[Egress %s] Handler closed.\n", this.egressInterface.getName());
+    }
+
+    @Override
+    public void handle(Packet packet) {
+        try {
+            this.egressHandle.sendPacket(packet);
+        } catch (NotOpenException | PcapNativeException exception) {
+            // Throw no exception to continue sending after exception
+            System.err.println(exception.getMessage());
+        }
     }
 
     @Override

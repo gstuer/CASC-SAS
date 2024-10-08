@@ -10,7 +10,9 @@ public abstract class EgressHandler<T> {
         this.egressQueue = Objects.requireNonNull(egressQueue);
     }
 
-    public abstract void handle();
+    public abstract void open();
+
+    public abstract void handle(T item);
 
     public abstract void close();
 
