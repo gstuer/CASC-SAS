@@ -1,7 +1,7 @@
 package com.gstuer.casc.pep.forwarding;
 
-import com.gstuer.casc.pep.EgressHandler;
 import com.gstuer.casc.pep.IngressHandler;
+import com.gstuer.casc.pep.PacketEgressHandler;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.packet.Packet;
@@ -18,7 +18,7 @@ public class ForwardingBridge {
     private final BlockingQueue<Packet> egressQueue;
 
     private IngressHandler ingressHandler;
-    private EgressHandler egressHandler;
+    private PacketEgressHandler egressHandler;
     private ExecutorService threadPool;
 
     public ForwardingBridge(PcapNetworkInterface ingressInterface, PcapNetworkInterface egressInterface) {
@@ -36,7 +36,7 @@ public class ForwardingBridge {
         // Construct packet capture handlers for ingress & egress
         try {
             ingressHandler = new IngressHandler(this.ingressInterface, new UnfilteredForwardingListener(this.egressQueue));
-            egressHandler = new EgressHandler(this.egressInterface, this.egressQueue);
+            egressHandler = new PacketEgressHandler(this.egressInterface, this.egressQueue);
         } catch (PcapNativeException exception) {
             throw new IllegalStateException(exception);
         }
