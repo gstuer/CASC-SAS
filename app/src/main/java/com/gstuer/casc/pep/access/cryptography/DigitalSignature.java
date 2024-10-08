@@ -2,6 +2,7 @@ package com.gstuer.casc.pep.access.cryptography;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Objects;
 
@@ -32,5 +33,22 @@ public class DigitalSignature implements Serializable {
     @Override
     public String toString() {
         return this.getDataAsHex();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
+        DigitalSignature signature = (DigitalSignature) object;
+        return Objects.deepEquals(data, signature.data) && Objects.equals(algorithmIdentifier, signature.algorithmIdentifier);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(Arrays.hashCode(data), algorithmIdentifier);
     }
 }
