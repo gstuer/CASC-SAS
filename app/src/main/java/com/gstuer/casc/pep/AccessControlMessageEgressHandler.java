@@ -13,11 +13,12 @@ import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
 public class AccessControlMessageEgressHandler extends EgressHandler<AccessControlMessage<?>> {
-    private static final int PORT = 10000;
+    private final int port;
     private DatagramSocket socket;
 
-    public AccessControlMessageEgressHandler(BlockingQueue<AccessControlMessage<?>> egressQueue) {
+    public AccessControlMessageEgressHandler(int port, BlockingQueue<AccessControlMessage<?>> egressQueue) {
         super(egressQueue);
+        this.port = port;
     }
 
     @Override
@@ -28,9 +29,11 @@ public class AccessControlMessageEgressHandler extends EgressHandler<AccessContr
 
         // Try to open a new datagram socket (UDP communication)
         try {
-            this.socket = new DatagramSocket(PORT);
+            this.socket = new DatagramSocket(null);
+            this.socket.setReuseAddress(true);
+            this.socket.bind(new InetSocketAddress(port));
         } catch (SocketException exception) {
-            throw new IllegalStateException("UDP egress handler cannot be opened for port " + PORT, exception);
+            throw new IllegalStateException("UDP egress handler cannot be opened for port " + this.port, exception);
         }
 
         while (this.isOpen()) {
@@ -56,7 +59,7 @@ public class AccessControlMessageEgressHandler extends EgressHandler<AccessContr
 
         try {
             byte[] serialMessage = new JsonProcessor().serialize(message);
-            SocketAddress receiverSocketAddress = new InetSocketAddress(message.getDestination(), PORT);
+            SocketAddress receiverSocketAddress = new InetSocketAddress(message.getDestination(), this.port);
             DatagramPacket packet = new DatagramPacket(serialMessage, serialMessage.length, receiverSocketAddress);
             this.socket.send(packet);
         } catch (SerializationException exception) {
