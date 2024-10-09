@@ -1,6 +1,6 @@
 package com.gstuer.casc.pep;
 
-import com.gstuer.casc.pep.access.PayloadExchangeMessage;
+import com.gstuer.casc.pep.access.AccessControlMessage;
 import com.gstuer.casc.pep.serialization.JsonProcessor;
 import com.gstuer.casc.pep.serialization.SerializationException;
 
@@ -12,11 +12,11 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
-public class PayloadExchangeEgressHandler extends EgressHandler<PayloadExchangeMessage> {
+public class AccessControlMessageEgressHandler extends EgressHandler<AccessControlMessage<?>> {
     private static final int PORT = 10000;
     private DatagramSocket socket;
 
-    public PayloadExchangeEgressHandler(BlockingQueue<PayloadExchangeMessage> egressQueue) {
+    public AccessControlMessageEgressHandler(BlockingQueue<AccessControlMessage<?>> egressQueue) {
         super(egressQueue);
     }
 
@@ -34,7 +34,7 @@ public class PayloadExchangeEgressHandler extends EgressHandler<PayloadExchangeM
         }
 
         while (this.isOpen()) {
-            PayloadExchangeMessage message;
+            AccessControlMessage<?> message;
             try {
                 message = takeNextQueueItem();
             } catch (InterruptedException exception) {
@@ -43,11 +43,11 @@ public class PayloadExchangeEgressHandler extends EgressHandler<PayloadExchangeM
             }
             handle(message);
         }
-        System.out.println("[Egress Payload Exchange] Handler closed.");
+        System.out.println("[Egress ACM] Handler closed.");
     }
 
     @Override
-    public void handle(PayloadExchangeMessage message) {
+    public void handle(AccessControlMessage<?> message) {
         if (this.socket == null) {
             throw new IllegalStateException("Handler not opened yet.");
         } else if (this.socket.isClosed()) {
@@ -60,10 +60,10 @@ public class PayloadExchangeEgressHandler extends EgressHandler<PayloadExchangeM
             DatagramPacket packet = new DatagramPacket(serialMessage, serialMessage.length, receiverSocketAddress);
             this.socket.send(packet);
         } catch (SerializationException exception) {
-            System.out.println("[Egress Payload Exchange] Serialization failed:" + exception.getMessage());
+            System.out.println("[Egress ACM] Serialization failed:" + exception.getMessage());
             return;
         } catch (IOException exception) {
-            System.out.println("[Egress Payload Exchange] Sending failed:" + exception.getMessage());
+            System.out.println("[Egress ACM] Sending failed:" + exception.getMessage());
             return;
         }
     }
