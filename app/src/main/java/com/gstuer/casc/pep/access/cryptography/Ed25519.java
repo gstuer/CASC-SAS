@@ -2,11 +2,8 @@ package com.gstuer.casc.pep.access.cryptography;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.util.Objects;
 
 /**
  * Represents a {@link Signer signer} and {@link Verifier verifier} based on the Ed25519 signature scheme.
@@ -38,11 +35,8 @@ import java.util.Objects;
  * verifier.setVerificationKey(publicKey);
  * }</pre>
  */
-public class Ed25519 implements Signer, Verifier {
+public class Ed25519 extends Authenticator {
     private static final String ALGORITHM_IDENTIFIER = "Ed25519";
-
-    private PrivateKey signingKey;
-    private PublicKey verificationKey;
 
     @Override
     public DigitalSignature sign(byte[] data) throws InvalidKeyException, SignatureException {
@@ -53,14 +47,9 @@ public class Ed25519 implements Signer, Verifier {
             // Since the algorithm is static, this exception might only be thrown in case of an incompatible platform
             throw new UnsupportedOperationException(exception);
         }
-        signer.initSign(this.signingKey);
+        signer.initSign(this.getSigningKey());
         signer.update(data);
         return new DigitalSignature(signer.sign(), ALGORITHM_IDENTIFIER);
-    }
-
-    @Override
-    public void setSigningKey(PrivateKey signingKey) {
-        this.signingKey = Objects.requireNonNull(signingKey);
     }
 
     @Override
@@ -72,14 +61,9 @@ public class Ed25519 implements Signer, Verifier {
             // Since the algorithm is static, this exception might only be thrown in case of an incompatible platform
             throw new UnsupportedOperationException(exception);
         }
-        signer.initVerify(this.verificationKey);
+        signer.initVerify(this.getVerificationKey());
         signer.update(data);
         return signer.verify(signature.getData());
-    }
-
-    @Override
-    public void setVerificationKey(PublicKey verificationKey) {
-        this.verificationKey = Objects.requireNonNull(verificationKey);
     }
 
     @Override

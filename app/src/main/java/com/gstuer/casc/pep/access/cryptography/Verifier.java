@@ -7,6 +7,8 @@ import java.security.SignatureException;
 public interface Verifier {
     public boolean verify(byte[] data, DigitalSignature signature) throws InvalidKeyException, SignatureException;
 
+    public PublicKey getVerificationKey();
+
     public void setVerificationKey(PublicKey verificationKey);
 
     public String getAlgorithmIdentifier();
