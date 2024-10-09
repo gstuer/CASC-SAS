@@ -24,6 +24,7 @@ public class PacketIngressHandler extends IngressHandler<Packet> {
         this.ingressHandle = buildHandle(ingressInterface);
     }
 
+    @Override
     public void open() {
         try {
             // Handle packets until interrupted or exception is thrown
@@ -36,6 +37,7 @@ public class PacketIngressHandler extends IngressHandler<Packet> {
         System.out.printf("[Ingress %s] Handler closed.\n", this.ingressInterface.getName());
     }
 
+    @Override
     public void close() {
         try {
             this.ingressHandle.breakLoop();

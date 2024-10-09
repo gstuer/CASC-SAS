@@ -21,6 +21,11 @@ public class KeyExchangeMessage extends AccessControlMessage<EncodedKey> {
     }
 
     @Override
+    public KeyExchangeMessage fromSource(InetAddress source) {
+        return new KeyExchangeMessage(source, this.getDestination(), this.getSignature(), this.getPayload());
+    }
+
+    @Override
     public String toString() {
         try {
             return new JsonProcessor().convertToJson(this);

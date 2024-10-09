@@ -21,6 +21,11 @@ public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
     }
 
     @Override
+    public PayloadExchangeMessage fromSource(InetAddress source) {
+        return new PayloadExchangeMessage(source, this.getDestination(), this.getSignature(), this.getPayload());
+    }
+
+    @Override
     public String toString() {
         try {
             return new JsonProcessor().convertToJson(this);

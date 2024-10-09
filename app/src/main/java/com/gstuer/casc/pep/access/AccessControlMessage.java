@@ -65,10 +65,13 @@ public abstract class AccessControlMessage<T> implements Serializable {
         return Objects.nonNull(this.payload);
     }
 
+    public abstract AccessControlMessage<T> fromSource(InetAddress source);
+
     @Override
     public String toString() {
         try {
-            return new JsonProcessor(true).convertToJson(this);
+            String json = new JsonProcessor(true).convertToJson(this);
+            return "[" + this.getClass().getSimpleName() + "]" + json;
         } catch (SerializationException exception) {
             throw new IllegalStateException(exception);
         }
