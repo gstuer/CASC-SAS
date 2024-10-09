@@ -10,18 +10,18 @@ import org.pcap4j.packet.Packet;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class IngressHandler {
+public class PacketIngressHandler {
     private final PcapNetworkInterface ingressInterface;
     private final PcapHandle ingressHandle;
     private final PacketListener packetListener;
 
-    public IngressHandler(PcapNetworkInterface ingressInterface, PacketListener packetListener) throws PcapNativeException {
+    public PacketIngressHandler(PcapNetworkInterface ingressInterface, PacketListener packetListener) throws PcapNativeException {
         this.ingressInterface = Objects.requireNonNull(ingressInterface);
         this.ingressHandle = buildHandle(ingressInterface);
         this.packetListener = Objects.requireNonNull(packetListener);
     }
 
-    public IngressHandler(PcapNetworkInterface ingressInterface, Consumer<Packet> packetConsumer) throws PcapNativeException {
+    public PacketIngressHandler(PcapNetworkInterface ingressInterface, Consumer<Packet> packetConsumer) throws PcapNativeException {
         this(ingressInterface, createFromPacketConsumer(packetConsumer));
     }
 

@@ -21,8 +21,8 @@ public class NetworkBridge {
 
     private PacketEgressHandler egressHandlerInsecure;
     private PacketEgressHandler egressHandlerSecure;
-    private IngressHandler ingressHandlerInsecure;
-    private IngressHandler ingressHandlerSecure;
+    private PacketIngressHandler ingressHandlerInsecure;
+    private PacketIngressHandler ingressHandlerSecure;
     private ExecutorService threadPool;
 
     public NetworkBridge(PcapNetworkInterface networkInterfaceInsecure, PcapNetworkInterface networkInterfaceSecure, PacketPredicate... bypassPredicates) {
@@ -61,8 +61,8 @@ public class NetworkBridge {
         try {
             this.egressHandlerInsecure = new PacketEgressHandler(this.networkInterfaceInsecure, this.egressQueueInsecure);
             this.egressHandlerSecure = new PacketEgressHandler(this.networkInterfaceSecure, this.egressQueueSecure);
-            this.ingressHandlerInsecure = new IngressHandler(this.networkInterfaceInsecure, packetConsumerInsecure);
-            this.ingressHandlerSecure = new IngressHandler(this.networkInterfaceSecure, packetConsumerSecure);
+            this.ingressHandlerInsecure = new PacketIngressHandler(this.networkInterfaceInsecure, packetConsumerInsecure);
+            this.ingressHandlerSecure = new PacketIngressHandler(this.networkInterfaceSecure, packetConsumerSecure);
         } catch (PcapNativeException exception) {
             throw new IllegalStateException(exception);
         }
