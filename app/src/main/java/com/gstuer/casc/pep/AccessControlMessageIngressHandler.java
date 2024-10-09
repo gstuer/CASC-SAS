@@ -4,6 +4,8 @@ import com.gstuer.casc.pep.access.AccessControlMessage;
 import com.gstuer.casc.pep.serialization.JsonProcessor;
 import com.gstuer.casc.pep.serialization.SerializationException;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -32,10 +34,13 @@ public class AccessControlMessageIngressHandler extends IngressHandler<AccessCon
                 byte[] buffer = new byte[socket.getReceiveBufferSize()];
                 DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
                 socket.receive(datagram);
+
+                // Remove "empty" bytes from buffer to avoid deserialization issues
+                datagram.setData(new DataInputStream(new ByteArrayInputStream(datagram.getData(), datagram.getOffset(), datagram.getLength())).readAllBytes());
                 new Thread(() -> this.handle(datagram)).start();
             }
         } catch (IOException exception) {
-            System.err.println("[Ingress ACM] Binding socket failed.");
+            System.err.println("[Ingress ACM] Binding socket failed: " + exception.getMessage());
             throw new IllegalStateException(exception);
         } finally {
             System.err.println("[Ingress ACM] Socket closed.");
