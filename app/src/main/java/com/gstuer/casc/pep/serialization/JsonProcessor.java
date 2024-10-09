@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.gstuer.casc.pep.access.AccessControlMessage;
+import com.gstuer.casc.pep.access.KeyExchangeMessage;
+import com.gstuer.casc.pep.access.KeyExchangeRequestMessage;
 import com.gstuer.casc.pep.access.PayloadExchangeMessage;
 import org.pcap4j.packet.Packet;
 
@@ -31,6 +33,8 @@ public class JsonProcessor {
         RuntimeTypeAdapterFactory<?> messageAdapterFactory = RuntimeTypeAdapterFactory
                 .of(AccessControlMessage.class)
                 .registerSubtype(PayloadExchangeMessage.class)
+                .registerSubtype(KeyExchangeMessage.class)
+                .registerSubtype(KeyExchangeRequestMessage.class)
                 .recognizeSubtypes();
         builder.registerTypeAdapterFactory(messageAdapterFactory);
         this.gson = builder.create();

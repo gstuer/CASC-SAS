@@ -20,7 +20,7 @@ public abstract class AccessControlMessage<T> implements Serializable {
 
     protected AccessControlMessage(InetAddress destination, DigitalSignature signature, T payload) {
         this.destinationAddress = destination.getHostAddress();
-        this.signature = Objects.requireNonNull(signature);
+        this.signature = signature;
         this.payload = payload;
     }
 
@@ -36,8 +36,16 @@ public abstract class AccessControlMessage<T> implements Serializable {
         return this.signature;
     }
 
+    public boolean hasSignature() {
+        return Objects.nonNull(this.signature);
+    }
+
     public T getPayload() {
         return this.payload;
+    }
+
+    public boolean hasPayload() {
+        return Objects.nonNull(this.payload);
     }
 
     @Override
