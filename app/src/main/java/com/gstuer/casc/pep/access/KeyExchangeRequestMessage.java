@@ -11,6 +11,10 @@ public class KeyExchangeRequestMessage extends AccessControlMessage<String> {
     @Serial
     private static final long serialVersionUID = -6381850339226959873L;
 
+    public KeyExchangeRequestMessage(InetAddress source, InetAddress destination, DigitalSignature signature, String algorithmIdentifier) {
+        super(source, destination, signature, algorithmIdentifier);
+    }
+
     public KeyExchangeRequestMessage(InetAddress destination, DigitalSignature signature, String algorithmIdentifier) {
         super(destination, signature, algorithmIdentifier);
     }

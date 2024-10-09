@@ -14,14 +14,31 @@ public abstract class AccessControlMessage<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = 5060347937847810073L;
 
+    private final String sourceAddress;
     private final String destinationAddress;
     private final DigitalSignature signature;
     private final T payload;
 
-    protected AccessControlMessage(InetAddress destination, DigitalSignature signature, T payload) {
+    protected AccessControlMessage(InetAddress source, InetAddress destination, DigitalSignature signature, T payload) {
+        this.sourceAddress = Objects.isNull(source) ? null : source.getHostAddress();
         this.destinationAddress = destination.getHostAddress();
         this.signature = signature;
         this.payload = payload;
+    }
+
+    protected AccessControlMessage(InetAddress destination, DigitalSignature signature, T payload) {
+        this(null, destination, signature, payload);
+    }
+
+    public InetAddress getSource() {
+        if (Objects.isNull(this.sourceAddress)) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(destinationAddress);
+        } catch (UnknownHostException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     public InetAddress getDestination() {

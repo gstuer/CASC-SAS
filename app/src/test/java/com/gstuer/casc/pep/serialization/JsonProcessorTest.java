@@ -22,6 +22,7 @@ public class JsonProcessorTest {
     public void testSerializationAndDeserializationOfPayloadExchangeMessage() throws UnknownHostException, SerializationException {
         // Test data
         JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
         InetAddress destination = InetAddress.getByName("localhost");
         Packet packet = new EthernetPacket.Builder()
                 .srcAddr(MacAddress.getByName("00:00:00:00:00:00"))
@@ -30,7 +31,7 @@ public class JsonProcessorTest {
                 .paddingAtBuild(true)
                 .build();
         DigitalSignature signature = new DigitalSignature(new byte[32], "test");
-        PayloadExchangeMessage message = new PayloadExchangeMessage(destination, signature, packet);
+        PayloadExchangeMessage message = new PayloadExchangeMessage(source, destination, signature, packet);
 
         // Execution
         byte[] serialMessage = jsonProcessor.serialize(message);
@@ -38,6 +39,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
+        assertEquals(source, message.getSource());
         assertEquals(destination, message.getDestination());
         assertEquals(signature, deserialMessage.getSignature());
         assertEquals(packet.getHeader(), deserialMessage.getPayload().getHeader());
@@ -47,10 +49,11 @@ public class JsonProcessorTest {
     public void testSerializationAndDeserializationOfKeyExchangeRequestMessageWithSignature() throws SerializationException, UnknownHostException {
         // Test data
         JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
         InetAddress destination = InetAddress.getByName("localhost");
         DigitalSignature signature = new DigitalSignature(new byte[32], "test");
         String algorithmIdentifier = "ALGORITHM";
-        KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(destination, signature, algorithmIdentifier);
+        KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(source, destination, signature, algorithmIdentifier);
 
         // Execution
         byte[] serialMessage = jsonProcessor.serialize(message);
@@ -58,6 +61,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
+        assertEquals(source, message.getSource());
         assertEquals(destination, message.getDestination());
         assertEquals(signature, deserialMessage.getSignature());
         assertEquals(algorithmIdentifier, deserialMessage.getPayload());
@@ -67,9 +71,10 @@ public class JsonProcessorTest {
     public void testSerializationAndDeserializationOfKeyExchangeRequestMessageWithoutSignature() throws SerializationException, UnknownHostException {
         // Test data
         JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
         InetAddress destination = InetAddress.getByName("localhost");
         String algorithmIdentifier = "ALGORITHM";
-        KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(destination, null, algorithmIdentifier);
+        KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(source, destination, null, algorithmIdentifier);
 
         // Execution
         byte[] serialMessage = jsonProcessor.serialize(message);
@@ -77,6 +82,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
+        assertEquals(source, message.getSource());
         assertEquals(destination, message.getDestination());
         assertNull(deserialMessage.getSignature());
         assertEquals(algorithmIdentifier, deserialMessage.getPayload());
@@ -86,10 +92,11 @@ public class JsonProcessorTest {
     public void testSerializationAndDeserializationOfKeyExchangeMessage() throws SerializationException, UnknownHostException {
         // Test data
         JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
         InetAddress destination = InetAddress.getByName("localhost");
         DigitalSignature signature = new DigitalSignature(new byte[32], "test");
         EncodedKey encodedKey = new EncodedKey("ALGORITHM", new byte[32]);
-        KeyExchangeMessage message = new KeyExchangeMessage(destination, signature, encodedKey);
+        KeyExchangeMessage message = new KeyExchangeMessage(source, destination, signature, encodedKey);
 
         // Execution
         byte[] serialMessage = jsonProcessor.serialize(message);
@@ -97,6 +104,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
+        assertEquals(source, message.getSource());
         assertEquals(destination, message.getDestination());
         assertEquals(signature, deserialMessage.getSignature());
         assertEquals(encodedKey, deserialMessage.getPayload());
