@@ -47,7 +47,7 @@ public class ForwardingBridge {
         // Start ingress and egress threads
         threadPool = Executors.newFixedThreadPool(2);
         this.threadPool.submit(egressHandler::open);
-        this.threadPool.submit(ingressHandler::handle);
+        this.threadPool.submit(ingressHandler::open);
     }
 
     public void stopForwarding() {

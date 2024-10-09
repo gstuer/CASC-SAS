@@ -71,8 +71,8 @@ public class NetworkBridge {
         this.threadPool = Executors.newFixedThreadPool(4);
         this.threadPool.submit(egressHandlerInsecure::open);
         this.threadPool.submit(egressHandlerSecure::open);
-        this.threadPool.submit(ingressHandlerInsecure::handle);
-        this.threadPool.submit(ingressHandlerSecure::handle);
+        this.threadPool.submit(ingressHandlerInsecure::open);
+        this.threadPool.submit(ingressHandlerSecure::open);
     }
 
     public void close() {
