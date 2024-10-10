@@ -13,12 +13,14 @@ import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
 public class AccessControlMessageEgressHandler extends EgressHandler<AccessControlMessage<?>> {
-    private final int port;
+    private final int sourcePort;
+    private final int destinationPort;
     private DatagramSocket socket;
 
-    public AccessControlMessageEgressHandler(int port, BlockingQueue<AccessControlMessage<?>> egressQueue) {
+    public AccessControlMessageEgressHandler(int sourcePort, int destinationPort, BlockingQueue<AccessControlMessage<?>> egressQueue) {
         super(egressQueue);
-        this.port = port;
+        this.sourcePort = sourcePort;
+        this.destinationPort = destinationPort;
     }
 
     @Override
@@ -29,11 +31,9 @@ public class AccessControlMessageEgressHandler extends EgressHandler<AccessContr
 
         // Try to open a new datagram socket (UDP communication)
         try {
-            this.socket = new DatagramSocket(null);
-            this.socket.setReuseAddress(true);
-            this.socket.bind(new InetSocketAddress(port));
+            socket = new DatagramSocket(new InetSocketAddress("0.0.0.0", this.sourcePort));
         } catch (SocketException exception) {
-            throw new IllegalStateException("UDP egress handler cannot be opened for port " + this.port, exception);
+            throw new IllegalStateException("UDP egress handler cannot be opened for port " + this.sourcePort, exception);
         }
 
         while (this.isOpen()) {
@@ -59,7 +59,7 @@ public class AccessControlMessageEgressHandler extends EgressHandler<AccessContr
 
         try {
             byte[] serialMessage = new JsonProcessor().serialize(message);
-            SocketAddress receiverSocketAddress = new InetSocketAddress(message.getDestination(), this.port);
+            SocketAddress receiverSocketAddress = new InetSocketAddress(message.getDestination(), this.destinationPort);
             DatagramPacket packet = new DatagramPacket(serialMessage, serialMessage.length, receiverSocketAddress);
             this.socket.send(packet);
         } catch (SerializationException exception) {

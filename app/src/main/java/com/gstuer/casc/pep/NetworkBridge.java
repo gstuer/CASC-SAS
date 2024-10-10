@@ -15,7 +15,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
 public class NetworkBridge {
-    private static final int EGRESS_PORT_MESSAGE = 10000;
+    private static final int UDP_PORT_INCOMING = 10000;
+    private static final int UDP_PORT_OUTGOING = 10001;
 
     private final PcapNetworkInterface networkInterfaceInsecure;
     private final PcapNetworkInterface networkInterfaceSecure;
@@ -74,12 +75,12 @@ public class NetworkBridge {
         // Construct ingress and egress handlers
         try {
             // Egress handler
-            this.egressHandlerMessage = new AccessControlMessageEgressHandler(EGRESS_PORT_MESSAGE, this.egressQueueMessage);
+            this.egressHandlerMessage = new AccessControlMessageEgressHandler(UDP_PORT_OUTGOING, UDP_PORT_INCOMING, this.egressQueueMessage);
             this.egressHandlerInsecure = new PacketEgressHandler(this.networkInterfaceInsecure, this.egressQueueInsecure);
             this.egressHandlerSecure = new PacketEgressHandler(this.networkInterfaceSecure, this.egressQueueSecure);
 
             // Ingress handler
-            this.ingressHandlerMessage = new AccessControlMessageIngressHandler(EGRESS_PORT_MESSAGE, this.accessController::handleIncomingRequest);
+            this.ingressHandlerMessage = new AccessControlMessageIngressHandler(UDP_PORT_INCOMING, this.accessController::handleIncomingRequest);
             this.ingressHandlerInsecure = new PacketIngressHandler(this.networkInterfaceInsecure, packetConsumerInsecure);
             this.ingressHandlerSecure = new PacketIngressHandler(this.networkInterfaceSecure, packetConsumerSecure);
         } catch (PcapNativeException exception) {

@@ -26,9 +26,7 @@ public class AccessControlMessageIngressHandler extends IngressHandler<AccessCon
     public void open() {
         DatagramSocket socket;
         try {
-            socket = new DatagramSocket(null);
-            socket.setReuseAddress(true);
-            socket.bind(new InetSocketAddress(port));
+            socket = new DatagramSocket(new InetSocketAddress("0.0.0.0", port));
             System.out.printf("[Ingress ACM] Buffer size: %d Bytes.\n", socket.getReceiveBufferSize());
             while (!socket.isClosed()) {
                 byte[] buffer = new byte[socket.getReceiveBufferSize()];
