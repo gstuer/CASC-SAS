@@ -67,7 +67,6 @@ public class AccessController {
 
         // Step 5: Queue access request for insecure egress
         this.messageEgress.offer(payloadExchange);
-        System.out.printf("[AC] Payload exchange sent to %s.\n", payloadExchange.getDestination().getHostAddress());
     }
 
     public void handleIncomingRequest(AccessControlMessage<?> accessControlMessage) {
