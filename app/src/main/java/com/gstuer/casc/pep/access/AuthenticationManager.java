@@ -1,7 +1,7 @@
 package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.pep.access.cryptography.Authenticator;
-import com.gstuer.casc.pep.access.cryptography.Ed25519;
+import com.gstuer.casc.pep.access.cryptography.Ed25519Authenticator;
 import com.gstuer.casc.pep.access.cryptography.Signer;
 import com.gstuer.casc.pep.access.cryptography.Verifier;
 
@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -28,7 +29,7 @@ public class AuthenticationManager {
     public AuthenticationManager(BlockingQueue<AccessControlMessage<?>> messageEgress) {
         this.messageEgress = Objects.requireNonNull(messageEgress);
         // Initialize the default signer for this manager
-        this.authenticator = new Ed25519();
+        this.authenticator = new Ed25519Authenticator();
         KeyPairGenerator keyPairGenerator;
         try {
             keyPairGenerator = KeyPairGenerator.getInstance(this.authenticator.getAlgorithmIdentifier());
@@ -58,7 +59,7 @@ public class AuthenticationManager {
     }
 
     private final class VerifierRequest {
-        private static final long REQUEST_TIMEOUT_NANOS = 100000000;
+        private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(10);
 
         private final ReadWriteLock lock = new ReentrantReadWriteLock();
         private final Condition empty = this.lock.writeLock().newCondition();

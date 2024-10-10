@@ -1,7 +1,7 @@
 package com.gstuer.casc.pep.access;
 
-import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
 import com.gstuer.casc.pep.access.cryptography.Signer;
+import com.gstuer.casc.pep.access.cryptography.Verifier;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.util.MacAddress;
@@ -52,35 +52,52 @@ public class AccessController {
             return;
         }
 
-        // Step 3: Derive signature for packet
+        // Step 3: Derive signature for packet & wrap with packet in access request
         Signer signer = this.authenticationManager.getSigner();
-        DigitalSignature signature;
+        PayloadExchangeMessage message = new PayloadExchangeMessage(destination, null, packet);
         try {
-            signature = signer.sign(packet.getRawData());
+            message = message.sign(signer);
         } catch (SignatureException | InvalidKeyException exception) {
-            System.out.println("[AC] Error: " + exception.getMessage());
+            System.out.println("[AC] Signing failed: " + exception.getMessage());
             return;
         }
 
-        // Step 4: Wrap signature & packet in access request
-        PayloadExchangeMessage payloadExchange = new PayloadExchangeMessage(destination, signature, packet);
-
-        // Step 5: Queue access request for insecure egress
-        this.messageEgress.offer(payloadExchange);
+        // Step 4: Queue access request for insecure egress
+        this.messageEgress.offer(message);
     }
 
     public void handleIncomingRequest(AccessControlMessage<?> accessControlMessage) {
-        /* TODO Add handling of packets from insecure to secure network
-         * Step 1: Verify signature
-         * Step 2: Verify access control decision (access control decision lookup)
-         * Step 3: Unwrap access request
-         * Step 4: Queue encapsulated packet for secure egress
-         */
+        // TODO Add handling of packets from insecure to secure network
+        // Step 1: Identify type of message
         if (accessControlMessage instanceof PayloadExchangeMessage message) {
-            Packet packet = message.getPayload();
-            this.packetEgress.offer(packet);
+            // Step 2: Verify signature
+            if (!this.isVerified(message)) {
+                System.out.println("[AC] Verification negative.");
+                return;
+            }
+            // TODO Step 3: Verify access control decision (access control decision lookup)
+            // Step 4: Queue encapsulated packet for secure egress
+            this.packetEgress.offer(message.getPayload());
         } else {
             System.out.println("Unknown message type.");
+        }
+    }
+
+    private boolean isVerified(AccessControlMessage<?> message) {
+        InetAddress source = message.getSource();
+        // Check if the message has a signature
+        if (!message.hasSignature()) {
+            System.out.printf("[AC] %s without signature from %s.\n", message.getClass().getSimpleName(), source.getHostAddress());
+            return false;
+        }
+
+        // Get the appropriate verifier and verify the appended signature
+        Verifier verifier = this.authenticationManager.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
+        try {
+            return message.verify(verifier);
+        } catch (SignatureException | InvalidKeyException exception) {
+            System.out.println("[AC] Verification failed: " + exception.getMessage());
+            return false;
         }
     }
 }

@@ -35,7 +35,7 @@ import java.security.SignatureException;
  * verifier.setVerificationKey(publicKey);
  * }</pre>
  */
-public class Ed25519 extends Authenticator {
+public class Ed25519Authenticator extends Authenticator {
     private static final String ALGORITHM_IDENTIFIER = "Ed25519";
 
     @Override

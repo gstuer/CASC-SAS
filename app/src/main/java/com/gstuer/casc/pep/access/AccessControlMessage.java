@@ -1,6 +1,8 @@
 package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
+import com.gstuer.casc.pep.access.cryptography.Signer;
+import com.gstuer.casc.pep.access.cryptography.Verifier;
 import com.gstuer.casc.pep.serialization.JsonProcessor;
 import com.gstuer.casc.pep.serialization.SerializationException;
 
@@ -8,6 +10,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 import java.util.Objects;
 
 public abstract class AccessControlMessage<T> implements Serializable {
@@ -67,6 +71,12 @@ public abstract class AccessControlMessage<T> implements Serializable {
 
     public abstract AccessControlMessage<T> fromSource(InetAddress source);
 
+    public abstract AccessControlMessage<T> sign(Signer signer) throws SignatureException, InvalidKeyException;
+
+    public boolean verify(Verifier verifier) throws SignatureException, InvalidKeyException {
+        return verifier.verify(this.getSigningData(), this.getSignature());
+    }
+
     @Override
     public String toString() {
         try {
@@ -76,4 +86,6 @@ public abstract class AccessControlMessage<T> implements Serializable {
             throw new IllegalStateException(exception);
         }
     }
+
+    protected abstract byte[] getSigningData();
 }

@@ -1,11 +1,14 @@
 package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
+import com.gstuer.casc.pep.access.cryptography.Signer;
 import com.gstuer.casc.pep.serialization.JsonProcessor;
 import com.gstuer.casc.pep.serialization.SerializationException;
 
 import java.io.Serial;
 import java.net.InetAddress;
+import java.security.InvalidKeyException;
+import java.security.SignatureException;
 
 public class KeyExchangeRequestMessage extends AccessControlMessage<String> {
     @Serial
@@ -25,11 +28,22 @@ public class KeyExchangeRequestMessage extends AccessControlMessage<String> {
     }
 
     @Override
+    public KeyExchangeRequestMessage sign(Signer signer) throws SignatureException, InvalidKeyException {
+        DigitalSignature signature = signer.sign(getSigningData());
+        return new KeyExchangeRequestMessage(this.getSource(), this.getDestination(), signature, this.getPayload());
+    }
+
+    @Override
     public String toString() {
         try {
             return new JsonProcessor().convertToJson(this);
         } catch (SerializationException exception) {
             throw new IllegalStateException(exception);
         }
+    }
+
+    @Override
+    protected byte[] getSigningData() {
+        return this.getPayload().getBytes(JsonProcessor.getDefaultCharset());
     }
 }

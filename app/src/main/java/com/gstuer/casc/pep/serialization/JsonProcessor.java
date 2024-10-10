@@ -40,6 +40,10 @@ public class JsonProcessor {
         this.gson = builder.create();
     }
 
+    public static Charset getDefaultCharset() {
+        return DEFAULT_CHARSET;
+    }
+
     public String convertToJson(Object object) throws SerializationException {
         try {
             return this.gson.toJson(object);
