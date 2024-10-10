@@ -2,6 +2,7 @@ package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.pep.access.cryptography.Signer;
 import com.gstuer.casc.pep.access.cryptography.Verifier;
+import com.gstuer.casc.pep.access.exception.RequestTimeoutException;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.util.MacAddress;
@@ -92,10 +93,10 @@ public class AccessController {
         }
 
         // Get the appropriate verifier and verify the appended signature
-        Verifier verifier = this.authenticationManager.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
         try {
+            Verifier verifier = this.authenticationManager.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
             return message.verify(verifier);
-        } catch (SignatureException | InvalidKeyException exception) {
+        } catch (SignatureException | InvalidKeyException | RequestTimeoutException exception) {
             System.out.println("[AC] Verification failed: " + exception.getMessage());
             return false;
         }

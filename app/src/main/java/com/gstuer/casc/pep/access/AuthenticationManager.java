@@ -4,6 +4,7 @@ import com.gstuer.casc.pep.access.cryptography.Authenticator;
 import com.gstuer.casc.pep.access.cryptography.Ed25519Authenticator;
 import com.gstuer.casc.pep.access.cryptography.Signer;
 import com.gstuer.casc.pep.access.cryptography.Verifier;
+import com.gstuer.casc.pep.access.exception.RequestTimeoutException;
 
 import java.net.InetAddress;
 import java.security.KeyPair;
@@ -49,24 +50,22 @@ public class AuthenticationManager {
         return this.authenticator;
     }
 
-    public Verifier getVerifier(String algorithmIdentifier, InetAddress externalHost) {
+    public Verifier getVerifier(String algorithmIdentifier, InetAddress externalHost) throws RequestTimeoutException {
         Map<String, VerifierRequest> hostVerifiers = this.verifiers.computeIfAbsent(externalHost, key -> new ConcurrentHashMap<>());
         VerifierRequest verifier = hostVerifiers.computeIfAbsent(algorithmIdentifier, key -> new VerifierRequest());
-        if (verifier.isUnavailable()) {
-            verifier.request(algorithmIdentifier, externalHost);
-        }
-        return verifier.get();
+        return verifier.get(algorithmIdentifier, externalHost);
     }
 
     private final class VerifierRequest {
-        private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(10);
+        private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(25);
+        private static final long REQUEST_RETRIES = 4;
 
         private final ReadWriteLock lock = new ReentrantReadWriteLock();
         private final Condition empty = this.lock.writeLock().newCondition();
         private volatile Verifier verifier;
         private volatile LocalDateTime requestTime;
 
-        public Verifier get() {
+        public Verifier get(String algorithmIdentifier, InetAddress externalHost) throws RequestTimeoutException {
             Lock readLock = this.lock.readLock();
             Lock writeLock = this.lock.writeLock();
             readLock.lock();
@@ -75,9 +74,21 @@ public class AuthenticationManager {
                     readLock.unlock();
                     writeLock.lock();
                     try {
+                        int count = 0;
                         while (verifier == null) {
                             try {
-                                empty.await();
+                                if (count > REQUEST_RETRIES) {
+                                    break;
+                                }
+                                if (isUnavailable() && !isRequestPending()) {
+                                    // TODO Add optional signature to request message
+                                    KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(externalHost, null, algorithmIdentifier);
+                                    AuthenticationManager.this.messageEgress.offer(message);
+                                    this.requestTime = LocalDateTime.now();
+                                    System.out.printf("[AM] Key exchange request sent to %s.\n", externalHost.getHostAddress());
+                                }
+                                empty.awaitNanos(REQUEST_TIMEOUT_NANOS);
+                                count++;
                             } catch (InterruptedException exception) {
                                 continue;
                             }
@@ -87,6 +98,9 @@ public class AuthenticationManager {
                         this.empty.signalAll();
                         writeLock.unlock();
                     }
+                }
+                if (verifier == null) {
+                    throw new RequestTimeoutException("Unsatisfied request reached maximum number of retries.");
                 }
                 return verifier;
             } finally {
@@ -100,23 +114,6 @@ public class AuthenticationManager {
             this.verifier = verifier;
             this.empty.signalAll();
             writeLock.unlock();
-        }
-
-        public void request(String algorithmIdentifier, InetAddress externalHost) {
-            Lock writeLock = this.lock.writeLock();
-            writeLock.lock();
-            try {
-                if (!isUnavailable() && isRequestPending()) {
-                    return;
-                }
-                // TODO Add optional signature to request message
-                KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(externalHost, null, algorithmIdentifier);
-                AuthenticationManager.this.messageEgress.offer(message);
-                this.requestTime = LocalDateTime.now();
-                System.out.printf("[AM] Key exchange request sent to %s.\n", externalHost.getHostAddress());
-            } finally {
-                writeLock.unlock();
-            }
         }
 
         public boolean isUnavailable() {
@@ -133,7 +130,7 @@ public class AuthenticationManager {
             Lock readLock = this.lock.readLock();
             readLock.lock();
             try {
-                return requestTime != null && requestTime.plusNanos(REQUEST_TIMEOUT_NANOS).isAfter(LocalDateTime.now());
+                return requestTime != null && LocalDateTime.now().isBefore(requestTime.plusNanos(REQUEST_TIMEOUT_NANOS));
             } finally {
                 readLock.unlock();
             }
