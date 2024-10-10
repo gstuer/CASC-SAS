@@ -50,8 +50,8 @@ public class AuthenticationManager {
     }
 
     public Verifier getVerifier(String algorithmIdentifier, InetAddress externalHost) {
-        Map<String, VerifierRequest> hostVerifiers = this.verifiers.putIfAbsent(externalHost, new ConcurrentHashMap<>());
-        VerifierRequest verifier = hostVerifiers.putIfAbsent(algorithmIdentifier, new VerifierRequest());
+        Map<String, VerifierRequest> hostVerifiers = this.verifiers.computeIfAbsent(externalHost, key -> new ConcurrentHashMap<>());
+        VerifierRequest verifier = hostVerifiers.computeIfAbsent(algorithmIdentifier, key -> new VerifierRequest());
         if (verifier.isUnavailable()) {
             verifier.request(algorithmIdentifier, externalHost);
         }
@@ -105,14 +105,15 @@ public class AuthenticationManager {
         public void request(String algorithmIdentifier, InetAddress externalHost) {
             Lock writeLock = this.lock.writeLock();
             writeLock.lock();
-            if (!isUnavailable() && isRequestPending()) {
-                return;
-            }
             try {
+                if (!isUnavailable() && isRequestPending()) {
+                    return;
+                }
                 // TODO Add optional signature to request message
                 KeyExchangeRequestMessage message = new KeyExchangeRequestMessage(externalHost, null, algorithmIdentifier);
                 AuthenticationManager.this.messageEgress.offer(message);
                 this.requestTime = LocalDateTime.now();
+                System.out.printf("[AM] Key exchange request sent to %s.\n", externalHost.getHostAddress());
             } finally {
                 writeLock.unlock();
             }
@@ -121,13 +122,21 @@ public class AuthenticationManager {
         public boolean isUnavailable() {
             Lock readLock = this.lock.readLock();
             readLock.lock();
-            return verifier == null;
+            try {
+                return verifier == null;
+            } finally {
+                readLock.unlock();
+            }
         }
 
         public boolean isRequestPending() {
             Lock readLock = this.lock.readLock();
             readLock.lock();
-            return requestTime != null && requestTime.plusNanos(REQUEST_TIMEOUT_NANOS).isAfter(LocalDateTime.now());
+            try {
+                return requestTime != null && requestTime.plusNanos(REQUEST_TIMEOUT_NANOS).isAfter(LocalDateTime.now());
+            } finally {
+                readLock.unlock();
+            }
         }
     }
 }
