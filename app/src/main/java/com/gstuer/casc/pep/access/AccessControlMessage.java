@@ -39,7 +39,7 @@ public abstract class AccessControlMessage<T> implements Serializable {
             return null;
         }
         try {
-            return InetAddress.getByName(destinationAddress);
+            return InetAddress.getByName(this.sourceAddress);
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
@@ -47,7 +47,7 @@ public abstract class AccessControlMessage<T> implements Serializable {
 
     public InetAddress getDestination() {
         try {
-            return InetAddress.getByName(destinationAddress);
+            return InetAddress.getByName(this.destinationAddress);
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
