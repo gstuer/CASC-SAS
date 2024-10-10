@@ -62,6 +62,13 @@ public class AuthenticationManager {
     }
 
     public void processMessage(KeyExchangeRequestMessage message) {
+        // Ignore message if requested type of authenticator not in use
+        if (!message.getPayload().equals(this.authenticator.getAlgorithmIdentifier())) {
+            System.err.println("[AM] Key request rejected: Illegal algorithm.");
+            return;
+        }
+
+        // Encode public key of authenticator in use
         EncodedKey encodedKey = new EncodedKey(this.authenticator.getAlgorithmIdentifier(),
                 this.authenticator.getVerificationKey().getEncoded());
         KeyExchangeMessage response = new KeyExchangeMessage(message.getSource(), null, encodedKey);
