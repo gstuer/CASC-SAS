@@ -2,17 +2,22 @@ package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.pep.access.cryptography.Authenticator;
 import com.gstuer.casc.pep.access.cryptography.Ed25519Authenticator;
+import com.gstuer.casc.pep.access.cryptography.EncodedKey;
 import com.gstuer.casc.pep.access.cryptography.Signer;
 import com.gstuer.casc.pep.access.cryptography.Verifier;
 import com.gstuer.casc.pep.access.exception.RequestTimeoutException;
 
 import java.net.InetAddress;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -56,8 +61,84 @@ public class AuthenticationManager {
         return verifier.get(algorithmIdentifier, externalHost);
     }
 
+    public void processMessage(KeyExchangeRequestMessage message) {
+        EncodedKey encodedKey = new EncodedKey(this.authenticator.getAlgorithmIdentifier(),
+                this.authenticator.getVerificationKey().getEncoded());
+        KeyExchangeMessage response = new KeyExchangeMessage(message.getSource(), null, encodedKey);
+        this.signMessage(response).ifPresent(this.messageEgress::offer);
+    }
+
+    public void processMessage(KeyExchangeMessage message) {
+        // Fetch relevant information from received message
+        InetAddress externalHost = message.getSource();
+        EncodedKey encodedKey = message.getPayload();
+        String algorithmIdentifier = encodedKey.getAlgorithmIdentifier();
+
+        // Get or create corresponding verifier entry in verifiers map
+        Map<String, VerifierRequest> hostVerifiers = this.verifiers.computeIfAbsent(externalHost, key -> new ConcurrentHashMap<>());
+        VerifierRequest verifierRequest = hostVerifiers.computeIfAbsent(algorithmIdentifier, key -> new VerifierRequest());
+
+        // TODO Replace with some kind of polymorphic verifier solution
+        // Initialize public key & verifier based on encoded key material
+        Verifier verifier;
+        try {
+            switch (algorithmIdentifier) {
+                case Ed25519Authenticator.ALGORITHM_IDENTIFIER:
+                    verifier = new Ed25519Authenticator();
+                    verifier.setVerificationKey(encodedKey);
+                    break;
+                default:
+                    System.err.println("[AM] Key exchange failed: Unknown algorithm.");
+                    return;
+            }
+        } catch (InvalidKeySpecException exception) {
+            System.err.println("[AM] Key exchange failed: " + exception.getMessage());
+            return;
+        }
+
+        // Verify received message with initialized verifier
+        if (message.hasSignature()) {
+            try {
+                if (message.verify(verifier)) {
+                    // TODO Add handling for already existing key -> Spoofing risk?
+                    verifierRequest.set(verifier);
+                }
+            } catch (SignatureException | InvalidKeyException exception) {
+                System.out.println("[AM] Verification failed: " + exception.getMessage());
+                return;
+            }
+        }
+    }
+
+    public boolean verifyMessage(AccessControlMessage<?> message) {
+        InetAddress source = message.getSource();
+        // Check if the message has a signature
+        if (!message.hasSignature()) {
+            System.out.printf("[AM] %s without signature from %s.\n", message.getClass().getSimpleName(), source.getHostAddress());
+            return false;
+        }
+
+        // Get the appropriate verifier and verify the appended signature
+        try {
+            Verifier verifier = this.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
+            return message.verify(verifier);
+        } catch (SignatureException | InvalidKeyException | RequestTimeoutException exception) {
+            System.out.println("[AM] Verification failed: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    public Optional<AccessControlMessage<?>> signMessage(AccessControlMessage<?> message) {
+        try {
+            return Optional.of(message.sign(this.authenticator));
+        } catch (SignatureException | InvalidKeyException exception) {
+            System.out.println("[AM] Signing failed: " + exception.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private final class VerifierRequest {
-        private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(25);
+        private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
         private static final long REQUEST_RETRIES = 4;
 
         private final ReadWriteLock lock = new ReentrantReadWriteLock();

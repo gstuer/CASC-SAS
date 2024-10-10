@@ -1,9 +1,13 @@
 package com.gstuer.casc.pep.access.cryptography;
 
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Represents a {@link Signer signer} and {@link Verifier verifier} based on the Ed25519 signature scheme.
@@ -36,7 +40,7 @@ import java.security.SignatureException;
  * }</pre>
  */
 public class Ed25519Authenticator extends Authenticator {
-    private static final String ALGORITHM_IDENTIFIER = "Ed25519";
+    public static final String ALGORITHM_IDENTIFIER = "Ed25519";
 
     @Override
     public DigitalSignature sign(byte[] data) throws InvalidKeyException, SignatureException {
@@ -64,6 +68,19 @@ public class Ed25519Authenticator extends Authenticator {
         signer.initVerify(this.getVerificationKey());
         signer.update(data);
         return signer.verify(signature.getData());
+    }
+
+    @Override
+    public void setVerificationKey(EncodedKey encodedVerificationKey) throws InvalidKeySpecException {
+        KeyFactory keyFactory;
+        try {
+            keyFactory = KeyFactory.getInstance(this.getAlgorithmIdentifier());
+        } catch (NoSuchAlgorithmException exception) {
+            // Since the algorithm is static, this exception might only be thrown in case of an incompatible platform
+            throw new UnsupportedOperationException(exception);
+        }
+        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(encodedVerificationKey.getKey()));
+        this.setVerificationKey(publicKey);
     }
 
     @Override
