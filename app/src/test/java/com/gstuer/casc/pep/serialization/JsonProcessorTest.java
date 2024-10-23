@@ -1,5 +1,10 @@
 package com.gstuer.casc.pep.serialization;
 
+import com.gstuer.casc.common.pattern.AccessRequestPattern;
+import com.gstuer.casc.common.pattern.EthernetPattern;
+import com.gstuer.casc.common.pattern.IPv4Pattern;
+import com.gstuer.casc.common.pattern.PatternFactory;
+import com.gstuer.casc.common.pattern.UdpPattern;
 import com.gstuer.casc.pep.access.AccessControlMessage;
 import com.gstuer.casc.pep.access.KeyExchangeMessage;
 import com.gstuer.casc.pep.access.KeyExchangeRequestMessage;
@@ -8,10 +13,19 @@ import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
 import com.gstuer.casc.pep.access.cryptography.EncodedKey;
 import org.junit.jupiter.api.Test;
 import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.IpV4Rfc1349Tos;
 import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.UdpPacket;
 import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.packet.namednumber.IpNumber;
+import org.pcap4j.packet.namednumber.IpV4TosPrecedence;
+import org.pcap4j.packet.namednumber.IpV4TosTos;
+import org.pcap4j.packet.namednumber.IpVersion;
+import org.pcap4j.packet.namednumber.UdpPort;
 import org.pcap4j.util.MacAddress;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -108,5 +122,55 @@ public class JsonProcessorTest {
         assertEquals(destination, message.getDestination());
         assertEquals(signature, deserialMessage.getSignature());
         assertEquals(encodedKey, deserialMessage.getPayload());
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAccessRequestPattern() throws UnknownHostException, SerializationException {
+        // Test data
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        EthernetPacket packet = new EthernetPacket.Builder()
+                .srcAddr(MacAddress.getByName("00:00:00:00:00:00"))
+                .dstAddr(MacAddress.getByName("ff:ff:ff:ff:ff:ff"))
+                .type(EtherType.IPV4)
+                .paddingAtBuild(true)
+                .payloadBuilder(new IpV4Packet.Builder()
+                        .version(IpVersion.IPV4)
+                        .tos(new IpV4Rfc1349Tos.Builder()
+                                .precedence(IpV4TosPrecedence.ROUTINE)
+                                .tos(IpV4TosTos.DEFAULT)
+                                .build())
+                        .srcAddr((Inet4Address) Inet4Address.getByName("192.168.0.50"))
+                        .dstAddr((Inet4Address) Inet4Address.getByName("192.168.0.51"))
+                        .protocol(IpNumber.UDP)
+                        .payloadBuilder(new UdpPacket.Builder()
+                                .srcAddr(Inet4Address.getByName("192.168.0.50"))
+                                .srcPort(new UdpPort((short) 10001, "SABAAC"))
+                                .dstAddr(Inet4Address.getByName("192.168.0.51"))
+                                .dstPort(new UdpPort((short) 10000, "SABAAC"))
+                        ))
+                .build();
+
+        // Execution
+        AccessRequestPattern pattern = PatternFactory.derivePatternFrom(packet);
+        byte[] serialPattern = jsonProcessor.serialize(pattern);
+        UdpPattern udpPattern = (UdpPattern) jsonProcessor.deserialize(serialPattern, AccessRequestPattern.class);
+        IPv4Pattern ipPattern = (IPv4Pattern) udpPattern.getEnclosedPattern();
+        EthernetPattern ethernetPattern = (EthernetPattern) ipPattern.getEnclosedPattern();
+
+        // Assertion
+        assertEquals(packet.getHeader().getSrcAddr().toString(), ethernetPattern.getSource());
+        assertEquals(packet.getHeader().getDstAddr().toString(), ethernetPattern.getDestination());
+        assertEquals(packet.getHeader().getType().valueAsString(), ethernetPattern.getEtherType());
+        assertFalse(ethernetPattern.hasEnclosedPattern());
+        assertNull(ethernetPattern.getEnclosedPattern());
+
+        IpV4Packet ipPacket = (IpV4Packet) packet.getPayload();
+        assertEquals(ipPacket.getHeader().getSrcAddr().getHostAddress(), ipPattern.getSource());
+        assertEquals(ipPacket.getHeader().getDstAddr().getHostAddress(), ipPattern.getDestination());
+        assertEquals(ipPacket.getHeader().getProtocol().name(), ipPattern.getProtocol());
+
+        UdpPacket udpPacket = (UdpPacket) ipPacket.getPayload();
+        assertEquals(udpPacket.getHeader().getSrcPort().valueAsInt(), udpPattern.getSourcePort());
+        assertEquals(udpPacket.getHeader().getDstPort().valueAsInt(), udpPattern.getDestinationPort());
     }
 }

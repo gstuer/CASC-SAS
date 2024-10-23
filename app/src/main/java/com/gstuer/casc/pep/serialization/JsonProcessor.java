@@ -3,6 +3,11 @@ package com.gstuer.casc.pep.serialization;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.gstuer.casc.common.pattern.AccessRequestPattern;
+import com.gstuer.casc.common.pattern.EthernetPattern;
+import com.gstuer.casc.common.pattern.IPv4Pattern;
+import com.gstuer.casc.common.pattern.TcpPattern;
+import com.gstuer.casc.common.pattern.UdpPattern;
 import com.gstuer.casc.pep.access.AccessControlMessage;
 import com.gstuer.casc.pep.access.KeyExchangeMessage;
 import com.gstuer.casc.pep.access.KeyExchangeRequestMessage;
@@ -37,6 +42,14 @@ public class JsonProcessor {
                 .registerSubtype(KeyExchangeRequestMessage.class)
                 .recognizeSubtypes();
         builder.registerTypeAdapterFactory(messageAdapterFactory);
+        RuntimeTypeAdapterFactory<?> patternAdapterFactory = RuntimeTypeAdapterFactory
+                .of(AccessRequestPattern.class)
+                .registerSubtype(EthernetPattern.class)
+                .registerSubtype(IPv4Pattern.class)
+                .registerSubtype(UdpPattern.class)
+                .registerSubtype(TcpPattern.class)
+                .recognizeSubtypes();
+        builder.registerTypeAdapterFactory(patternAdapterFactory);
         this.gson = builder.create();
     }
 

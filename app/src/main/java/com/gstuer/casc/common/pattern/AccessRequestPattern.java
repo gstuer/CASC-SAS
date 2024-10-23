@@ -1,5 +1,8 @@
 package com.gstuer.casc.common.pattern;
 
+import com.gstuer.casc.pep.serialization.JsonProcessor;
+import com.gstuer.casc.pep.serialization.SerializationException;
+
 import java.util.Objects;
 
 /**
@@ -104,5 +107,14 @@ public abstract class AccessRequestPattern {
     @Override
     public int hashCode() {
         return Objects.hashCode(enclosedPattern);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return new JsonProcessor(true).convertToJson(this);
+        } catch (SerializationException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 }
