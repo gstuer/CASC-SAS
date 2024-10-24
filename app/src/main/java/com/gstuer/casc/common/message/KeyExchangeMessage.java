@@ -31,7 +31,7 @@ public class KeyExchangeMessage extends AccessControlMessage<EncodedKey> {
 
     @Override
     public KeyExchangeMessage sign(Signer signer) throws SignatureException, InvalidKeyException {
-        DigitalSignature signature = signer.sign(getSigningData());
+        DigitalSignature signature = signer.sign(this);
         return new KeyExchangeMessage(this.getSource(), this.getDestination(), signature, this.getPayload());
     }
 
@@ -45,7 +45,7 @@ public class KeyExchangeMessage extends AccessControlMessage<EncodedKey> {
     }
 
     @Override
-    protected byte[] getSigningData() {
+    public byte[] getSigningData() {
         EncodedKey encodedKey = this.getPayload();
         return ArrayUtils.addAll(encodedKey.getAlgorithmIdentifier().getBytes(JsonProcessor.getDefaultCharset()),
                 encodedKey.getKey());

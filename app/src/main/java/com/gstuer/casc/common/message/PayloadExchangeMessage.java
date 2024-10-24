@@ -30,7 +30,7 @@ public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
 
     @Override
     public PayloadExchangeMessage sign(Signer signer) throws SignatureException, InvalidKeyException {
-        DigitalSignature signature = signer.sign(getSigningData());
+        DigitalSignature signature = signer.sign(this);
         return new PayloadExchangeMessage(this.getSource(), this.getDestination(), signature, this.getPayload());
     }
 
@@ -44,7 +44,7 @@ public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
     }
 
     @Override
-    protected byte[] getSigningData() {
+    public byte[] getSigningData() {
         return this.getPayload().getRawData();
     }
 }

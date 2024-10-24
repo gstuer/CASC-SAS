@@ -1,6 +1,7 @@
 package com.gstuer.casc.common.message;
 
 import com.gstuer.casc.common.cryptography.DigitalSignature;
+import com.gstuer.casc.common.cryptography.Signable;
 import com.gstuer.casc.common.cryptography.Signer;
 import com.gstuer.casc.common.cryptography.Verifier;
 import com.gstuer.casc.common.serialization.JsonProcessor;
@@ -14,7 +15,7 @@ import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.Objects;
 
-public abstract class AccessControlMessage<T> implements Serializable {
+public abstract class AccessControlMessage<T> implements Serializable, Signable {
     @Serial
     private static final long serialVersionUID = 5060347937847810073L;
 
@@ -86,6 +87,4 @@ public abstract class AccessControlMessage<T> implements Serializable {
             throw new IllegalStateException(exception);
         }
     }
-
-    protected abstract byte[] getSigningData();
 }

@@ -29,7 +29,7 @@ public class KeyExchangeRequestMessage extends AccessControlMessage<String> {
 
     @Override
     public KeyExchangeRequestMessage sign(Signer signer) throws SignatureException, InvalidKeyException {
-        DigitalSignature signature = signer.sign(getSigningData());
+        DigitalSignature signature = signer.sign(this);
         return new KeyExchangeRequestMessage(this.getSource(), this.getDestination(), signature, this.getPayload());
     }
 
@@ -43,7 +43,7 @@ public class KeyExchangeRequestMessage extends AccessControlMessage<String> {
     }
 
     @Override
-    protected byte[] getSigningData() {
+    public byte[] getSigningData() {
         return this.getPayload().getBytes(JsonProcessor.getDefaultCharset());
     }
 }
