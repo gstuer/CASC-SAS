@@ -1,5 +1,6 @@
 package com.gstuer.casc.common.pattern;
 
+import com.gstuer.casc.common.cryptography.Signable;
 import com.gstuer.casc.common.serialization.JsonProcessor;
 import com.gstuer.casc.common.serialization.SerializationException;
 
@@ -9,7 +10,7 @@ import java.util.Objects;
  * A pattern that represents an access request in a network. The access request pattern is either used as a rule for
  * matching network traffic or it represents a specific packet of the network traffic that has to satisfy the network rules.
  */
-public abstract class AccessRequestPattern {
+public abstract class AccessRequestPattern implements Signable {
     public final AccessRequestPattern enclosedPattern;
 
     protected AccessRequestPattern(AccessRequestPattern enclosedPattern) {
@@ -116,5 +117,10 @@ public abstract class AccessRequestPattern {
         } catch (SerializationException exception) {
             throw new IllegalStateException(exception);
         }
+    }
+
+    @Override
+    public byte[] getSigningData() {
+        return this.enclosedPattern.getSigningData();
     }
 }

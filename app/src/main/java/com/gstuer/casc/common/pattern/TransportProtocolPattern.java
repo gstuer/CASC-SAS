@@ -1,5 +1,8 @@
 package com.gstuer.casc.common.pattern;
 
+import com.google.common.primitives.Ints;
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.Objects;
 
 public abstract class TransportProtocolPattern extends AccessRequestPattern {
@@ -50,5 +53,11 @@ public abstract class TransportProtocolPattern extends AccessRequestPattern {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), sourcePort, destinationPort);
+    }
+
+    @Override
+    public byte[] getSigningData() {
+        return ArrayUtils.addAll(Ints.toByteArray(sourcePort),
+                ArrayUtils.addAll(Ints.toByteArray(destinationPort), super.getSigningData()));
     }
 }

@@ -1,5 +1,8 @@
 package com.gstuer.casc.common.pattern;
 
+import com.gstuer.casc.common.serialization.JsonProcessor;
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.Objects;
 
 public class EthernetPattern extends AccessRequestPattern {
@@ -62,5 +65,11 @@ public class EthernetPattern extends AccessRequestPattern {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), source, destination, etherType);
+    }
+
+    @Override
+    public byte[] getSigningData() {
+        byte[] bytes = source.concat(destination).concat(etherType).getBytes(JsonProcessor.getDefaultCharset());
+        return ArrayUtils.addAll(bytes, super.getSigningData());
     }
 }
