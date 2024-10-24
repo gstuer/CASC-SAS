@@ -1,9 +1,9 @@
-package com.gstuer.casc.pep.access;
+package com.gstuer.casc.common.message;
 
-import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
-import com.gstuer.casc.pep.access.cryptography.Signer;
-import com.gstuer.casc.pep.serialization.JsonProcessor;
-import com.gstuer.casc.pep.serialization.SerializationException;
+import com.gstuer.casc.common.cryptography.DigitalSignature;
+import com.gstuer.casc.common.cryptography.Signer;
+import com.gstuer.casc.common.serialization.JsonProcessor;
+import com.gstuer.casc.common.serialization.SerializationException;
 import org.pcap4j.packet.Packet;
 
 import java.io.Serial;

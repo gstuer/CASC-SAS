@@ -1,10 +1,13 @@
 package com.gstuer.casc.pep.access;
 
-import com.gstuer.casc.pep.access.cryptography.Authenticator;
-import com.gstuer.casc.pep.access.cryptography.Ed25519Authenticator;
-import com.gstuer.casc.pep.access.cryptography.EncodedKey;
-import com.gstuer.casc.pep.access.cryptography.Signer;
-import com.gstuer.casc.pep.access.cryptography.Verifier;
+import com.gstuer.casc.common.cryptography.Authenticator;
+import com.gstuer.casc.common.cryptography.Ed25519Authenticator;
+import com.gstuer.casc.common.cryptography.EncodedKey;
+import com.gstuer.casc.common.cryptography.Signer;
+import com.gstuer.casc.common.cryptography.Verifier;
+import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.KeyExchangeMessage;
+import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.pep.access.exception.RequestTimeoutException;
 
 import java.net.InetAddress;

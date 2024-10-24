@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep;
+package com.gstuer.casc.common.ingress;
 
 import java.util.Objects;
 import java.util.function.Consumer;

@@ -1,7 +1,7 @@
 package com.gstuer.casc.pep.forwarding;
 
-import com.gstuer.casc.pep.PacketEgressHandler;
-import com.gstuer.casc.pep.PacketIngressHandler;
+import com.gstuer.casc.common.egress.PacketEgressHandler;
+import com.gstuer.casc.common.ingress.PacketIngressHandler;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.packet.Packet;

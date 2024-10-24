@@ -1,7 +1,7 @@
 package com.gstuer.casc.common.pattern;
 
-import com.gstuer.casc.pep.serialization.JsonProcessor;
-import com.gstuer.casc.pep.serialization.SerializationException;
+import com.gstuer.casc.common.serialization.JsonProcessor;
+import com.gstuer.casc.common.serialization.SerializationException;
 
 import java.util.Objects;
 

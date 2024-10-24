@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep;
+package com.gstuer.casc.common.egress;
 
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;

@@ -1,16 +1,18 @@
 package com.gstuer.casc.pep.serialization;
 
+import com.gstuer.casc.common.cryptography.DigitalSignature;
+import com.gstuer.casc.common.cryptography.EncodedKey;
+import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.KeyExchangeMessage;
+import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
+import com.gstuer.casc.common.message.PayloadExchangeMessage;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import com.gstuer.casc.common.pattern.IPv4Pattern;
 import com.gstuer.casc.common.pattern.PatternFactory;
 import com.gstuer.casc.common.pattern.UdpPattern;
-import com.gstuer.casc.pep.access.AccessControlMessage;
-import com.gstuer.casc.pep.access.KeyExchangeMessage;
-import com.gstuer.casc.pep.access.KeyExchangeRequestMessage;
-import com.gstuer.casc.pep.access.PayloadExchangeMessage;
-import com.gstuer.casc.pep.access.cryptography.DigitalSignature;
-import com.gstuer.casc.pep.access.cryptography.EncodedKey;
+import com.gstuer.casc.common.serialization.JsonProcessor;
+import com.gstuer.casc.common.serialization.SerializationException;
 import org.junit.jupiter.api.Test;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IpV4Packet;

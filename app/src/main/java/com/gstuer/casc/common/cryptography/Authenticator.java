@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep.access.cryptography;
+package com.gstuer.casc.common.cryptography;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;

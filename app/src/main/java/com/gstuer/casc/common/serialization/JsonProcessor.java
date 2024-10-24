@@ -1,17 +1,17 @@
-package com.gstuer.casc.pep.serialization;
+package com.gstuer.casc.common.serialization;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.KeyExchangeMessage;
+import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
+import com.gstuer.casc.common.message.PayloadExchangeMessage;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import com.gstuer.casc.common.pattern.IPv4Pattern;
 import com.gstuer.casc.common.pattern.TcpPattern;
 import com.gstuer.casc.common.pattern.UdpPattern;
-import com.gstuer.casc.pep.access.AccessControlMessage;
-import com.gstuer.casc.pep.access.KeyExchangeMessage;
-import com.gstuer.casc.pep.access.KeyExchangeRequestMessage;
-import com.gstuer.casc.pep.access.PayloadExchangeMessage;
 import org.pcap4j.packet.Packet;
 
 import java.nio.charset.Charset;

@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep.serialization;
+package com.gstuer.casc.common.serialization;
 
 import java.io.Serial;
 

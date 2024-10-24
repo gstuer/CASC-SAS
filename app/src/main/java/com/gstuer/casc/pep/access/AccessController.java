@@ -1,6 +1,10 @@
 package com.gstuer.casc.pep.access;
 
-import com.gstuer.casc.pep.access.cryptography.Signer;
+import com.gstuer.casc.common.cryptography.Signer;
+import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.KeyExchangeMessage;
+import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
+import com.gstuer.casc.common.message.PayloadExchangeMessage;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.util.MacAddress;

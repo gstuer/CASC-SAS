@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep;
+package com.gstuer.casc.common.egress;
 
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;

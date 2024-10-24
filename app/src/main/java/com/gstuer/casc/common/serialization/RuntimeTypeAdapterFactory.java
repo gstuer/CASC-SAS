@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.gstuer.casc.pep.serialization;
+package com.gstuer.casc.common.serialization;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.gson.Gson;

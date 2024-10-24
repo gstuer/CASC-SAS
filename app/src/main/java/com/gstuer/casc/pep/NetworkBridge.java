@@ -1,6 +1,10 @@
 package com.gstuer.casc.pep;
 
-import com.gstuer.casc.pep.access.AccessControlMessage;
+import com.gstuer.casc.common.egress.AccessControlMessageEgressHandler;
+import com.gstuer.casc.common.egress.PacketEgressHandler;
+import com.gstuer.casc.common.ingress.AccessControlMessageIngressHandler;
+import com.gstuer.casc.common.ingress.PacketIngressHandler;
+import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.pep.access.AccessController;
 import com.gstuer.casc.pep.predicate.PacketPredicate;
 import org.pcap4j.core.PcapNativeException;

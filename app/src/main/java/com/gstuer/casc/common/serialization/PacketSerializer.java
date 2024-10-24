@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep.serialization;
+package com.gstuer.casc.common.serialization;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -16,7 +16,7 @@ import java.util.HexFormat;
 
 public class PacketSerializer implements JsonSerializer<Packet>, JsonDeserializer<Packet> {
     private static final DataLinkType DEFAULT_DATA_LINK_TYPE = DataLinkType.EN10MB;
-    
+
     @Override
     public JsonElement serialize(Packet src, Type typeOfSrc, JsonSerializationContext context) {
         HexFormat hexFormat = HexFormat.of();
