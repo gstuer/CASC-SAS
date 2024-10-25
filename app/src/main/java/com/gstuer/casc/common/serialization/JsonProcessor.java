@@ -16,6 +16,7 @@ import org.pcap4j.packet.Packet;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 
 public class JsonProcessor {
     private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
@@ -35,6 +36,7 @@ public class JsonProcessor {
 
         // Register custom type adapters to serialize/deserialize objects correctly
         builder.registerTypeAdapter(Packet.class, new PacketSerializer());
+        builder.registerTypeAdapter(Instant.class, new InstantSerializer());
         RuntimeTypeAdapterFactory<?> messageAdapterFactory = RuntimeTypeAdapterFactory
                 .of(AccessControlMessage.class)
                 .registerSubtype(PayloadExchangeMessage.class)

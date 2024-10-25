@@ -6,6 +6,7 @@ import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
+import com.gstuer.casc.common.pattern.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import com.gstuer.casc.common.pattern.IPv4Pattern;
@@ -30,6 +31,7 @@ import org.pcap4j.util.MacAddress;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -174,5 +176,27 @@ public class JsonProcessorTest {
         UdpPacket udpPacket = (UdpPacket) ipPacket.getPayload();
         assertEquals(udpPacket.getHeader().getSrcPort().valueAsInt(), udpPattern.getSourcePort());
         assertEquals(udpPacket.getHeader().getDstPort().valueAsInt(), udpPattern.getDestinationPort());
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAccessDecision() throws SerializationException, UnknownHostException {
+        // Test data
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        AccessRequestPattern pattern = new UdpPattern(10000, 10001, null);
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+        AccessDecision.Decision decision = AccessDecision.Decision.GRANTED;
+        Instant validUntilNow = Instant.now();
+        AccessDecision accessDecision = new AccessDecision(pattern, decision, address, validUntilNow);
+
+        // Execution
+        byte[] serial = jsonProcessor.serialize(accessDecision);
+        AccessDecision deserialized = jsonProcessor.deserialize(serial, AccessDecision.class);
+
+        // Assertion
+        assertNotNull(deserialized);
+        assertEquals(pattern, deserialized.getPattern());
+        assertEquals(address, deserialized.getNextHop());
+        assertEquals(decision, deserialized.getDecision());
+        assertEquals(validUntilNow, deserialized.getValidUntil());
     }
 }
