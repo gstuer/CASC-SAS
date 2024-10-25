@@ -9,7 +9,7 @@ import com.gstuer.casc.common.message.PayloadExchangeMessage;
 import com.gstuer.casc.common.pattern.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
-import com.gstuer.casc.common.pattern.IPv4Pattern;
+import com.gstuer.casc.common.pattern.IpPattern;
 import com.gstuer.casc.common.pattern.PatternFactory;
 import com.gstuer.casc.common.pattern.UdpPattern;
 import com.gstuer.casc.common.serialization.JsonProcessor;
@@ -158,7 +158,7 @@ public class JsonProcessorTest {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(packet);
         byte[] serialPattern = jsonProcessor.serialize(pattern);
         UdpPattern udpPattern = (UdpPattern) jsonProcessor.deserialize(serialPattern, AccessRequestPattern.class);
-        IPv4Pattern ipPattern = (IPv4Pattern) udpPattern.getEnclosedPattern();
+        IpPattern ipPattern = (IpPattern) udpPattern.getEnclosedPattern();
         EthernetPattern ethernetPattern = (EthernetPattern) ipPattern.getEnclosedPattern();
 
         // Assertion
@@ -169,9 +169,9 @@ public class JsonProcessorTest {
         assertNull(ethernetPattern.getEnclosedPattern());
 
         IpV4Packet ipPacket = (IpV4Packet) packet.getPayload();
-        assertEquals(ipPacket.getHeader().getSrcAddr().getHostAddress(), ipPattern.getSource());
-        assertEquals(ipPacket.getHeader().getDstAddr().getHostAddress(), ipPattern.getDestination());
-        assertEquals(ipPacket.getHeader().getProtocol().name(), ipPattern.getProtocol());
+        assertEquals(ipPacket.getHeader().getSrcAddr(), ipPattern.getSource());
+        assertEquals(ipPacket.getHeader().getDstAddr(), ipPattern.getDestination());
+        assertEquals(ipPacket.getHeader().getProtocol(), ipPattern.getProtocol());
 
         UdpPacket udpPacket = (UdpPacket) ipPacket.getPayload();
         assertEquals(udpPacket.getHeader().getSrcPort().valueAsInt(), udpPattern.getSourcePort());

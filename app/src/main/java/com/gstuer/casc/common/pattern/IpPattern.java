@@ -1,35 +1,36 @@
 package com.gstuer.casc.common.pattern;
 
-import com.gstuer.casc.common.serialization.JsonProcessor;
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.primitives.Bytes;
+import org.pcap4j.packet.namednumber.IpNumber;
 
+import java.net.InetAddress;
 import java.util.Objects;
 
-public class IPv4Pattern extends AccessRequestPattern {
-    private final String source;
-    private final String destination;
-    private final String protocol;
+public class IpPattern extends AccessRequestPattern {
+    private final InetAddress source;
+    private final InetAddress destination;
+    private final IpNumber protocol;
 
-    public IPv4Pattern(String source, String destination, String protocol) {
+    public IpPattern(InetAddress source, InetAddress destination, IpNumber protocol) {
         this(source, destination, protocol, null);
     }
 
-    public IPv4Pattern(String source, String destination, String protocol, AccessRequestPattern enclosedPattern) {
+    public IpPattern(InetAddress source, InetAddress destination, IpNumber protocol, AccessRequestPattern enclosedPattern) {
         super(enclosedPattern);
         this.source = source;
         this.destination = destination;
         this.protocol = protocol;
     }
 
-    public String getSource() {
+    public InetAddress getSource() {
         return this.source;
     }
 
-    public String getDestination() {
+    public InetAddress getDestination() {
         return this.destination;
     }
 
-    public String getProtocol() {
+    public IpNumber getProtocol() {
         return this.protocol;
     }
 
@@ -44,7 +45,7 @@ public class IPv4Pattern extends AccessRequestPattern {
         if (!super.equals(object)) {
             return false;
         }
-        IPv4Pattern that = (IPv4Pattern) object;
+        IpPattern that = (IpPattern) object;
         return Objects.equals(this.source, that.source) && Objects.equals(this.destination, that.destination)
                 && Objects.equals(this.protocol, that.protocol);
     }
@@ -57,7 +58,7 @@ public class IPv4Pattern extends AccessRequestPattern {
         if (object == null || getClass() != object.getClass()) {
             return false;
         }
-        IPv4Pattern that = (IPv4Pattern) object;
+        IpPattern that = (IpPattern) object;
         return Objects.equals(this.source, that.source) && Objects.equals(this.destination, that.destination)
                 && Objects.equals(this.protocol, that.protocol);
     }
@@ -69,7 +70,6 @@ public class IPv4Pattern extends AccessRequestPattern {
 
     @Override
     public byte[] getSigningData() {
-        byte[] bytes = source.concat(destination).concat(protocol).getBytes(JsonProcessor.getDefaultCharset());
-        return ArrayUtils.addAll(bytes, super.getSigningData());
+        return Bytes.concat(source.getAddress(), destination.getAddress(), new byte[]{protocol.value()});
     }
 }

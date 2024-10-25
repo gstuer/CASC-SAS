@@ -1,15 +1,19 @@
 package com.gstuer.casc.common.pattern;
 
 import org.junit.jupiter.api.Test;
+import org.pcap4j.packet.namednumber.IpNumber;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IPv4PatternTest {
+public class IpPatternTest {
     @Test
-    public void testContainsEqual() {
+    public void testContainsEqual() throws UnknownHostException {
         // Test data
-        IPv4Pattern firstPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06");
-        IPv4Pattern secondPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06");
+        IpPattern firstPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP);
+        IpPattern secondPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP);
 
         // Assertion
         assertTrue(firstPattern.contains(firstPattern));
@@ -19,12 +23,12 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsUnequal() {
+    public void testContainsUnequal() throws UnknownHostException {
         // Test data
-        IPv4Pattern firstPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06");
-        IPv4Pattern secondPattern = new IPv4Pattern("127.0.0.2", "255.255.255.255", "0x06");
-        IPv4Pattern thirdPattern = new IPv4Pattern("127.0.0.1", "254.255.255.255", "0x06");
-        IPv4Pattern fourthPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x11");
+        IpPattern firstPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP);
+        IpPattern secondPattern = new IpPattern(InetAddress.getByName("127.0.0.2"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP);
+        IpPattern thirdPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("254.255.255.255"), IpNumber.TCP);
+        IpPattern fourthPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.UDP);
 
         // Assertion
         assertFalse(firstPattern.contains(secondPattern));
@@ -45,12 +49,12 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsEqualEthernetEnclosed() {
+    public void testContainsEqualEthernetEnclosed() throws UnknownHostException {
         // Test data
         EthernetPattern firstEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern firstIP = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", firstEthernet);
+        IpPattern firstIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, firstEthernet);
         EthernetPattern secondEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern secondIP = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", secondEthernet);
+        IpPattern secondIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, secondEthernet);
 
         // Assertion
         assertTrue(firstIP.contains(firstIP));
@@ -61,12 +65,12 @@ public class IPv4PatternTest {
 
 
     @Test
-    public void testContainsUnequalEthernetEnclosed() {
+    public void testContainsUnequalEthernetEnclosed() throws UnknownHostException {
         // Test data
         EthernetPattern firstEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern firstIP = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", firstEthernet);
+        IpPattern firstIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, firstEthernet);
         EthernetPattern secondEthernet = new EthernetPattern("ff:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern secondIP = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", secondEthernet);
+        IpPattern secondIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, secondEthernet);
 
         // Assertion
         assertFalse(firstIP.contains(secondIP));
@@ -74,10 +78,10 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsEnclosedPattern() {
+    public void testContainsEnclosedPattern() throws UnknownHostException {
         // Test data
         EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern ipPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", ethernetPattern);
+        IpPattern ipPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, ethernetPattern);
 
         // Assertion
         assertTrue(ipPattern.contains(ethernetPattern));
@@ -85,11 +89,11 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsEnclosedPatternTransitive() {
+    public void testContainsEnclosedPatternTransitive() throws UnknownHostException {
         // Test data
         EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern outerIpPattern = new IPv4Pattern("192.168.0.1", "192.168.0.2", "0x04", ethernetPattern);
-        IPv4Pattern innerIpPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", outerIpPattern);
+        IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, ethernetPattern);
+        IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
         // Assertion
         assertTrue(innerIpPattern.contains(outerIpPattern));
@@ -98,13 +102,13 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsIsolatedEnclosedPattern() {
+    public void testContainsIsolatedEnclosedPattern() throws UnknownHostException {
         // Test data
         EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern outerIpPattern = new IPv4Pattern("192.168.0.1", "192.168.0.2", "0x04", ethernetPattern);
-        IPv4Pattern innerIpPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", outerIpPattern);
+        IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, ethernetPattern);
+        IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
-        IPv4Pattern outerIpPatternIsolated = new IPv4Pattern("192.168.0.1", "192.168.0.2", "0x04", null);
+        IpPattern outerIpPatternIsolated = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, null);
 
         // Assertion
         assertTrue(innerIpPattern.contains(outerIpPatternIsolated));
@@ -115,14 +119,14 @@ public class IPv4PatternTest {
     }
 
     @Test
-    public void testContainsEnclosedPatternUnequalSubtree() {
+    public void testContainsEnclosedPatternUnequalSubtree() throws UnknownHostException {
         // Test data
         EthernetPattern firstEthernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern outerIpPattern = new IPv4Pattern("192.168.0.1", "192.168.0.2", "0x04", firstEthernetPattern);
-        IPv4Pattern innerIpPattern = new IPv4Pattern("127.0.0.1", "255.255.255.255", "0x06", outerIpPattern);
+        IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, firstEthernetPattern);
+        IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
         EthernetPattern secondEthernetPattern = new EthernetPattern("ff:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
-        IPv4Pattern outerIpPatternDifferentSubtree = new IPv4Pattern("192.168.0.1", "192.168.0.2", "0x04", secondEthernetPattern);
+        IpPattern outerIpPatternDifferentSubtree = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, secondEthernetPattern);
 
         // Assertion
         assertNotEquals(firstEthernetPattern, secondEthernetPattern);

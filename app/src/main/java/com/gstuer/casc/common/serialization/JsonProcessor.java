@@ -9,7 +9,7 @@ import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
-import com.gstuer.casc.common.pattern.IPv4Pattern;
+import com.gstuer.casc.common.pattern.IpPattern;
 import com.gstuer.casc.common.pattern.TcpPattern;
 import com.gstuer.casc.common.pattern.UdpPattern;
 import org.pcap4j.packet.Packet;
@@ -47,7 +47,7 @@ public class JsonProcessor {
         RuntimeTypeAdapterFactory<?> patternAdapterFactory = RuntimeTypeAdapterFactory
                 .of(AccessRequestPattern.class)
                 .registerSubtype(EthernetPattern.class)
-                .registerSubtype(IPv4Pattern.class)
+                .registerSubtype(IpPattern.class)
                 .registerSubtype(UdpPattern.class)
                 .registerSubtype(TcpPattern.class)
                 .recognizeSubtypes();

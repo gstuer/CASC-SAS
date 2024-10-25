@@ -26,8 +26,8 @@ public final class PatternFactory {
             // Construct patterns for enclosed IPv4 packets
             if (ethernetPacket.getPayload() instanceof IpV4Packet ipV4Packet) {
                 IpV4Packet.IpV4Header ipV4Header = ipV4Packet.getHeader();
-                IPv4Pattern ipV4Pattern = new IPv4Pattern(ipV4Header.getSrcAddr().getHostAddress(),
-                        ipV4Header.getDstAddr().getHostAddress(), ipV4Header.getProtocol().name(), ethernetPattern);
+                IpPattern ipV4Pattern = new IpPattern(ipV4Header.getSrcAddr(),
+                        ipV4Header.getDstAddr(), ipV4Header.getProtocol(), ethernetPattern);
 
                 // Construct patterns for enclosed TCP or UDP packets
                 if (ipV4Packet.getPayload() instanceof UdpPacket udpPacket) {
