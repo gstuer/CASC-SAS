@@ -1,35 +1,37 @@
 package com.gstuer.casc.common.pattern;
 
-import com.gstuer.casc.common.serialization.JsonProcessor;
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Shorts;
+import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.util.MacAddress;
 
 import java.util.Objects;
 
 public class EthernetPattern extends AccessRequestPattern {
-    private final String source;
-    private final String destination;
-    private final String etherType;
+    private final MacAddress source;
+    private final MacAddress destination;
+    private final EtherType etherType;
 
-    public EthernetPattern(String sourceAddress, String destinationAddress, String etherType) {
+    public EthernetPattern(MacAddress sourceAddress, MacAddress destinationAddress, EtherType etherType) {
         this(sourceAddress, destinationAddress, etherType, null);
     }
 
-    public EthernetPattern(String sourceAddress, String destinationAddress, String etherType, AccessRequestPattern enclosedPattern) {
+    public EthernetPattern(MacAddress sourceAddress, MacAddress destinationAddress, EtherType etherType, AccessRequestPattern enclosedPattern) {
         super(enclosedPattern);
         this.source = Objects.requireNonNull(sourceAddress);
         this.destination = Objects.requireNonNull(destinationAddress);
         this.etherType = Objects.requireNonNull(etherType);
     }
 
-    public String getSource() {
+    public MacAddress getSource() {
         return this.source;
     }
 
-    public String getDestination() {
+    public MacAddress getDestination() {
         return this.destination;
     }
 
-    public String getEtherType() {
+    public EtherType getEtherType() {
         return this.etherType;
     }
 
@@ -69,7 +71,6 @@ public class EthernetPattern extends AccessRequestPattern {
 
     @Override
     public byte[] getSigningData() {
-        byte[] bytes = source.concat(destination).concat(etherType).getBytes(JsonProcessor.getDefaultCharset());
-        return ArrayUtils.addAll(bytes, super.getSigningData());
+        return Bytes.concat(source.getAddress(), destination.getAddress(), Shorts.toByteArray(etherType.value()));
     }
 }

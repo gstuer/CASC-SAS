@@ -1,7 +1,9 @@
 package com.gstuer.casc.common.pattern;
 
 import org.junit.jupiter.api.Test;
+import org.pcap4j.packet.namednumber.EtherType;
 import org.pcap4j.packet.namednumber.IpNumber;
+import org.pcap4j.util.MacAddress;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -51,9 +53,9 @@ public class IpPatternTest {
     @Test
     public void testContainsEqualEthernetEnclosed() throws UnknownHostException {
         // Test data
-        EthernetPattern firstEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern firstEthernet = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern firstIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, firstEthernet);
-        EthernetPattern secondEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern secondEthernet = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern secondIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, secondEthernet);
 
         // Assertion
@@ -67,9 +69,9 @@ public class IpPatternTest {
     @Test
     public void testContainsUnequalEthernetEnclosed() throws UnknownHostException {
         // Test data
-        EthernetPattern firstEthernet = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern firstEthernet = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern firstIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, firstEthernet);
-        EthernetPattern secondEthernet = new EthernetPattern("ff:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern secondEthernet = new EthernetPattern(MacAddress.getByName("ff:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern secondIP = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, secondEthernet);
 
         // Assertion
@@ -80,7 +82,7 @@ public class IpPatternTest {
     @Test
     public void testContainsEnclosedPattern() throws UnknownHostException {
         // Test data
-        EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern ethernetPattern = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern ipPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, ethernetPattern);
 
         // Assertion
@@ -91,7 +93,7 @@ public class IpPatternTest {
     @Test
     public void testContainsEnclosedPatternTransitive() throws UnknownHostException {
         // Test data
-        EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern ethernetPattern = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, ethernetPattern);
         IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
@@ -104,7 +106,7 @@ public class IpPatternTest {
     @Test
     public void testContainsIsolatedEnclosedPattern() throws UnknownHostException {
         // Test data
-        EthernetPattern ethernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern ethernetPattern = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, ethernetPattern);
         IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
@@ -121,11 +123,11 @@ public class IpPatternTest {
     @Test
     public void testContainsEnclosedPatternUnequalSubtree() throws UnknownHostException {
         // Test data
-        EthernetPattern firstEthernetPattern = new EthernetPattern("00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern firstEthernetPattern = new EthernetPattern(MacAddress.getByName("00:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern outerIpPattern = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, firstEthernetPattern);
         IpPattern innerIpPattern = new IpPattern(InetAddress.getByName("127.0.0.1"), InetAddress.getByName("255.255.255.255"), IpNumber.TCP, outerIpPattern);
 
-        EthernetPattern secondEthernetPattern = new EthernetPattern("ff:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "0x0800");
+        EthernetPattern secondEthernetPattern = new EthernetPattern(MacAddress.getByName("ff:00:00:00:00:00"), MacAddress.getByName("ff:ff:ff:ff:ff:ff"), EtherType.IPV4);
         IpPattern outerIpPatternDifferentSubtree = new IpPattern(InetAddress.getByName("192.168.0.1"), InetAddress.getByName("192.168.0.2"), IpNumber.IPV4, secondEthernetPattern);
 
         // Assertion

@@ -162,9 +162,9 @@ public class JsonProcessorTest {
         EthernetPattern ethernetPattern = (EthernetPattern) ipPattern.getEnclosedPattern();
 
         // Assertion
-        assertEquals(packet.getHeader().getSrcAddr().toString(), ethernetPattern.getSource());
-        assertEquals(packet.getHeader().getDstAddr().toString(), ethernetPattern.getDestination());
-        assertEquals(packet.getHeader().getType().valueAsString(), ethernetPattern.getEtherType());
+        assertEquals(packet.getHeader().getSrcAddr(), ethernetPattern.getSource());
+        assertEquals(packet.getHeader().getDstAddr(), ethernetPattern.getDestination());
+        assertEquals(packet.getHeader().getType(), ethernetPattern.getEtherType());
         assertFalse(ethernetPattern.hasEnclosedPattern());
         assertNull(ethernetPattern.getEnclosedPattern());
 

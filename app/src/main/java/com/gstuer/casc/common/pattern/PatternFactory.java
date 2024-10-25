@@ -20,8 +20,8 @@ public final class PatternFactory {
         if (packet instanceof EthernetPacket ethernetPacket) {
             // Construct ethernet packet from ethernet frame
             EthernetPacket.EthernetHeader ethernetHeader = ethernetPacket.getHeader();
-            EthernetPattern ethernetPattern = new EthernetPattern(ethernetHeader.getSrcAddr().toString(),
-                    ethernetHeader.getDstAddr().toString(), ethernetHeader.getType().valueAsString());
+            EthernetPattern ethernetPattern = new EthernetPattern(ethernetHeader.getSrcAddr(),
+                    ethernetHeader.getDstAddr(), ethernetHeader.getType());
 
             // Construct patterns for enclosed IPv4 packets
             if (ethernetPacket.getPayload() instanceof IpV4Packet ipV4Packet) {
