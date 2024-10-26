@@ -1,8 +1,10 @@
 jre := $(shell readlink $(shell which java))
 fatjarPep = pep/build/libs/pep.jar
+sourcesCommon := $(shell find common/src -type f)
+sourcesPdp := $(shell find pdp/src -type f)
 sourcesPep := $(shell find pep/src -type f)
 
-$(fatjarPep): $(sources)
+$(fatjarPep): $(sourcesPdp) $(sourcesPep) $(sourcesCommon)
 	gradle jar
 
 package: $(fatjarPep)
