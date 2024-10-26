@@ -87,4 +87,24 @@ public abstract class AccessControlMessage<T> implements Serializable, Signable 
             throw new IllegalStateException(exception);
         }
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
+        AccessControlMessage<?> that = (AccessControlMessage<?>) object;
+        return Objects.equals(sourceAddress, that.sourceAddress)
+                && Objects.equals(destinationAddress, that.destinationAddress)
+                && Objects.equals(signature, that.signature)
+                && Objects.equals(payload, that.payload);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sourceAddress, destinationAddress, signature, payload);
+    }
 }

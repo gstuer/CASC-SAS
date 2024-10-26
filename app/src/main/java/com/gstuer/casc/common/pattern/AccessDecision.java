@@ -89,6 +89,25 @@ public class AccessDecision implements Signable {
         }
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
+        AccessDecision that = (AccessDecision) object;
+        return Objects.equals(pattern, that.pattern)
+                && decision == that.decision && Objects.equals(nextHop, that.nextHop)
+                && Objects.equals(validUntil, that.validUntil);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pattern, decision, nextHop, validUntil);
+    }
+
     /**
      * Represents the result of a dynamic authorization of a policy decision point (PDP).
      */

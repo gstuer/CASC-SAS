@@ -3,6 +3,8 @@ package com.gstuer.casc.pep.serialization;
 import com.gstuer.casc.common.cryptography.DigitalSignature;
 import com.gstuer.casc.common.cryptography.EncodedKey;
 import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.AccessDecisionMessage;
+import com.gstuer.casc.common.message.AccessRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
@@ -79,10 +81,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
-        assertEquals(source, message.getSource());
-        assertEquals(destination, message.getDestination());
-        assertEquals(signature, deserialMessage.getSignature());
-        assertEquals(algorithmIdentifier, deserialMessage.getPayload());
+        assertEquals(message, deserialMessage);
     }
 
     @Test
@@ -100,10 +99,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
-        assertEquals(source, message.getSource());
-        assertEquals(destination, message.getDestination());
-        assertNull(deserialMessage.getSignature());
-        assertEquals(algorithmIdentifier, deserialMessage.getPayload());
+        assertEquals(message, deserialMessage);
     }
 
     @Test
@@ -122,10 +118,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
-        assertEquals(source, message.getSource());
-        assertEquals(destination, message.getDestination());
-        assertEquals(signature, deserialMessage.getSignature());
-        assertEquals(encodedKey, deserialMessage.getPayload());
+        assertEquals(message, deserialMessage);
     }
 
     @Test
@@ -162,20 +155,10 @@ public class JsonProcessorTest {
         EthernetPattern ethernetPattern = (EthernetPattern) ipPattern.getEnclosedPattern();
 
         // Assertion
-        assertEquals(packet.getHeader().getSrcAddr(), ethernetPattern.getSource());
-        assertEquals(packet.getHeader().getDstAddr(), ethernetPattern.getDestination());
-        assertEquals(packet.getHeader().getType(), ethernetPattern.getEtherType());
-        assertFalse(ethernetPattern.hasEnclosedPattern());
-        assertNull(ethernetPattern.getEnclosedPattern());
-
-        IpV4Packet ipPacket = (IpV4Packet) packet.getPayload();
-        assertEquals(ipPacket.getHeader().getSrcAddr(), ipPattern.getSource());
-        assertEquals(ipPacket.getHeader().getDstAddr(), ipPattern.getDestination());
-        assertEquals(ipPacket.getHeader().getProtocol(), ipPattern.getProtocol());
-
-        UdpPacket udpPacket = (UdpPacket) ipPacket.getPayload();
-        assertEquals(udpPacket.getHeader().getSrcPort().valueAsInt(), udpPattern.getSourcePort());
-        assertEquals(udpPacket.getHeader().getDstPort().valueAsInt(), udpPattern.getDestinationPort());
+        assertEquals(pattern, udpPattern);
+        assertTrue(udpPattern.equalsIsolated(pattern));
+        assertTrue(ipPattern.equalsIsolated(pattern.getEnclosedPattern()));
+        assertTrue(ethernetPattern.equalsIsolated(pattern.getEnclosedPattern().getEnclosedPattern()));
     }
 
     @Test
@@ -198,5 +181,50 @@ public class JsonProcessorTest {
         assertEquals(address, deserialized.getNextHop());
         assertEquals(decision, deserialized.getDecision());
         assertEquals(validUntilNow, deserialized.getValidUntil());
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAccessDecisionMessage() throws SerializationException, UnknownHostException {
+        // Test data
+        //// Construct access decision
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        AccessRequestPattern pattern = new UdpPattern(10000, 10001, null);
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+        AccessDecision.Decision decision = AccessDecision.Decision.GRANTED;
+        Instant validUntilNow = Instant.now();
+        AccessDecision accessDecision = new AccessDecision(pattern, decision, address, validUntilNow);
+
+        //// Construct message
+        DigitalSignature signature = new DigitalSignature(new byte[]{1, 2, 3, 4}, "test");
+        AccessDecisionMessage message = new AccessDecisionMessage(address, signature, accessDecision);
+
+        // Execution
+        byte[] serial = jsonProcessor.serialize(message);
+        AccessDecisionMessage deserialized = (AccessDecisionMessage) jsonProcessor.deserialize(serial, AccessControlMessage.class);
+
+        // Assertion
+        assertNotNull(deserialized);
+        assertEquals(message, deserialized);
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAccessRequestMessage() throws SerializationException, UnknownHostException {
+        // Test data
+        //// Construct access decision
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        AccessRequestPattern pattern = new UdpPattern(10000, 10001, null);
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+
+        //// Construct message
+        DigitalSignature signature = new DigitalSignature(new byte[]{1, 2, 3, 4}, "test");
+        AccessRequestMessage message = new AccessRequestMessage(address, signature, pattern);
+
+        // Execution
+        byte[] serial = jsonProcessor.serialize(message);
+        AccessRequestMessage deserialized = (AccessRequestMessage) jsonProcessor.deserialize(serial, AccessControlMessage.class);
+
+        // Assertion
+        assertNotNull(deserialized);
+        assertEquals(message, deserialized);
     }
 }
