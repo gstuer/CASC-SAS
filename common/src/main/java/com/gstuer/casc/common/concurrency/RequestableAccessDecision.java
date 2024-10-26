@@ -14,8 +14,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class RequestableAccessDecision extends RequestableResource<AccessDecision> {
-    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(20);
-    private static final int REQUEST_RETRIES = 1;
+    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
+    private static final int REQUEST_RETRIES = 4;
 
     private final AccessRequestPattern pattern;
 
