@@ -10,6 +10,7 @@ import java.io.Serial;
 import java.net.InetAddress;
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.Objects;
 
 public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
     @Serial
@@ -46,5 +47,14 @@ public class PayloadExchangeMessage extends AccessControlMessage<Packet> {
     @Override
     public byte[] getSigningData() {
         return this.getPayload().getRawData();
+    }
+
+    @Override
+    protected boolean hasEqualPayload(AccessControlMessage<?> message) {
+        if (message == null || getClass() != message.getClass()) {
+            return false;
+        }
+        PayloadExchangeMessage that = (PayloadExchangeMessage) message;
+        return Objects.deepEquals(this.getPayload().getRawData(), that.getPayload().getRawData());
     }
 }

@@ -100,11 +100,15 @@ public abstract class AccessControlMessage<T> implements Serializable, Signable 
         return Objects.equals(sourceAddress, that.sourceAddress)
                 && Objects.equals(destinationAddress, that.destinationAddress)
                 && Objects.equals(signature, that.signature)
-                && Objects.equals(payload, that.payload);
+                && this.hasEqualPayload(that);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(sourceAddress, destinationAddress, signature, payload);
+    }
+
+    protected boolean hasEqualPayload(AccessControlMessage<?> message) {
+        return Objects.equals(this.payload, message.getPayload());
     }
 }

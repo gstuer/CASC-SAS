@@ -59,10 +59,7 @@ public class JsonProcessorTest {
 
         // Assertion
         assertNotNull(deserialMessage);
-        assertEquals(source, message.getSource());
-        assertEquals(destination, message.getDestination());
-        assertEquals(signature, deserialMessage.getSignature());
-        assertEquals(packet.getHeader(), deserialMessage.getPayload().getHeader());
+        assertEquals(message, deserialMessage);
     }
 
     @Test
