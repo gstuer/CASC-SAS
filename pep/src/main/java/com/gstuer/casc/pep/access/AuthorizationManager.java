@@ -107,7 +107,7 @@ public class AuthorizationManager {
     public void processMessage(AccessDecisionMessage message) {
         // Reject empty messages and messages which do not come from a policy decision point (authorization authority)
         if (!this.authenticationClient.verifyMessage(message) || !message.hasPayload()
-                || !this.authorizationAuthority.equals(message.getPayload().getNextHop())) {
+                || !this.authorizationAuthority.equals(message.getSource())) {
             return;
         }
 
