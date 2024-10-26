@@ -1,5 +1,6 @@
 package com.gstuer.casc.pep.access;
 
+import com.gstuer.casc.common.AuthenticationClient;
 import com.gstuer.casc.common.concurrency.RequestableAccessDecision;
 import com.gstuer.casc.common.concurrency.exception.RequestTimeoutException;
 import com.gstuer.casc.common.message.AccessControlMessage;
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 public class AuthorizationManager {
     private final InetAddress authorizationAuthority;
     private final InetAddress authorizationScope;
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationClient authenticationClient;
     private final BlockingQueue<AccessControlMessage<?>> messageEgress;
     private final ConcurrentMap<AccessRequestPattern, RequestableAccessDecision> requestedDecisions;
     private final ConcurrentMap<AccessRequestPattern, AccessDecision> outgoingDecisions;
@@ -30,11 +31,11 @@ public class AuthorizationManager {
 
     public AuthorizationManager(InetAddress authorizationAuthority,
                                 InetAddress authorizationScope,
-                                AuthenticationManager authenticationManager,
+                                AuthenticationClient authenticationClient,
                                 BlockingQueue<AccessControlMessage<?>> messageEgress) {
         this.authorizationAuthority = Objects.requireNonNull(authorizationAuthority);
         this.authorizationScope = Objects.requireNonNull(authorizationScope);
-        this.authenticationManager = Objects.requireNonNull(authenticationManager);
+        this.authenticationClient = Objects.requireNonNull(authenticationClient);
         this.messageEgress = Objects.requireNonNull(messageEgress);
         this.requestedDecisions = new ConcurrentHashMap<>();
         this.outgoingDecisions = new ConcurrentHashMap<>();
@@ -61,7 +62,7 @@ public class AuthorizationManager {
         } else {
             // Request new decision from authorization authority
             RequestableAccessDecision requestableDecision = this.requestedDecisions.computeIfAbsent(pattern,
-                    key -> new RequestableAccessDecision(this.messageEgress, this.authenticationManager.getSigner(),
+                    key -> new RequestableAccessDecision(this.messageEgress, this.authenticationClient.getSigner(),
                             authorizationAuthority, pattern));
 
             // Wait until decision is available
@@ -105,7 +106,7 @@ public class AuthorizationManager {
 
     public void processMessage(AccessDecisionMessage message) {
         // Reject empty messages and messages which do not come from a policy decision point (authorization authority)
-        if (!this.authenticationManager.verifyMessage(message) || !message.hasPayload()
+        if (!this.authenticationClient.verifyMessage(message) || !message.hasPayload()
                 || !this.authorizationAuthority.equals(message.getPayload().getNextHop())) {
             return;
         }

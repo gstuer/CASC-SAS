@@ -1,4 +1,4 @@
-package com.gstuer.casc.pep.access;
+package com.gstuer.casc.common;
 
 import com.gstuer.casc.common.concurrency.RequestableVerifier;
 import com.gstuer.casc.common.concurrency.exception.RequestTimeoutException;
@@ -25,12 +25,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class AuthenticationManager {
+public class AuthenticationClient {
     private final Authenticator authenticator;
     private final ConcurrentMap<InetAddress, ConcurrentMap<String, RequestableVerifier>> verifiers;
     private final BlockingQueue<AccessControlMessage<?>> messageEgress;
 
-    public AuthenticationManager(BlockingQueue<AccessControlMessage<?>> messageEgress) {
+    public AuthenticationClient(BlockingQueue<AccessControlMessage<?>> messageEgress) {
         this.messageEgress = Objects.requireNonNull(messageEgress);
         // Initialize the default signer for this manager
         this.authenticator = new Ed25519Authenticator();
