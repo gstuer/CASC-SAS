@@ -45,16 +45,19 @@ public class AuthorizationManager {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(packet);
         Optional<AccessDecision> optionalDecision = this.outgoingDecisions.entrySet().stream().parallel()
                 .filter(entry -> pattern.contains(entry.getKey())
-                        && entry.getValue().getDecision().equals(AccessDecision.Decision.GRANTED)
                         && entry.getValue().getValidUntil().isAfter(Instant.now()))
                 .map(Map.Entry::getValue)
                 .findFirst();
 
         if (optionalDecision.isPresent()) {
             AccessDecision decision = optionalDecision.get();
-            // Construct unsigned payload exchange message
-            PayloadExchangeMessage message = new PayloadExchangeMessage(decision.getNextHop(), null, packet);
-            return Optional.of(message);
+            if (decision.getDecision().equals(AccessDecision.Decision.GRANTED)) {
+                // Access Granted -> Construct unsigned payload exchange message
+                PayloadExchangeMessage message = new PayloadExchangeMessage(decision.getNextHop(), null, packet);
+                return Optional.of(message);
+            }
+            // Access Denied -> Reject packet
+            return Optional.empty();
         } else {
             // Request new decision from authorization authority
             RequestableAccessDecision requestableDecision = this.requestedDecisions.computeIfAbsent(pattern,
@@ -110,13 +113,14 @@ public class AuthorizationManager {
         // Add decision to either the outgoing or incoming rules
         AccessDecision decision = message.getPayload();
         AccessRequestPattern pattern = decision.getPattern();
-        if (decision.getNextHop().equals(authorizationScope)
-                && decision.getDecision().equals(AccessDecision.Decision.GRANTED)
-                && decision.getValidUntil().isAfter(Instant.now())) {
+        if (decision.getNextHop().equals(authorizationScope)) {
             // If nextHop equals own scope, decision is still valid, & is granted -> Add to incoming rules
-            this.incomingDecisions.put(pattern, decision);
-        } else if (decision.getDecision().equals(AccessDecision.Decision.GRANTED)
-                && decision.getValidUntil().isAfter(Instant.now())) {
+            if (decision.getDecision().equals(AccessDecision.Decision.GRANTED)
+                    && decision.getValidUntil().isAfter(Instant.now())) {
+                // Only save granted decisions as incoming rules
+                this.incomingDecisions.put(pattern, decision);
+            }
+        } else if (decision.getValidUntil().isAfter(Instant.now())) {
             // If nextHop does not equal own scope, add decision to outgoing rules and resolve possible waiting packets
             this.outgoingDecisions.put(pattern, decision);
             this.resolveRequests(decision);
