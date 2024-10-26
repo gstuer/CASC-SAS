@@ -7,10 +7,13 @@ import com.gstuer.casc.common.ingress.PacketIngressHandler;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.pep.access.AccessController;
 import com.gstuer.casc.pep.predicate.PacketPredicate;
+import org.pcap4j.core.PcapAddress;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.packet.Packet;
 
+import java.net.InetAddress;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +27,7 @@ public class NetworkBridge {
 
     private final PcapNetworkInterface networkInterfaceInsecure;
     private final PcapNetworkInterface networkInterfaceSecure;
+    private final InetAddress authorizationAuthority;
     private final BlockingQueue<Packet> egressQueueInsecure;
     private final BlockingQueue<Packet> egressQueueSecure;
     private final BlockingQueue<AccessControlMessage<?>> egressQueueMessage;
@@ -38,9 +42,11 @@ public class NetworkBridge {
     private AccessController accessController;
     private ExecutorService threadPool;
 
-    public NetworkBridge(PcapNetworkInterface networkInterfaceInsecure, PcapNetworkInterface networkInterfaceSecure, PacketPredicate... bypassPredicates) {
+    public NetworkBridge(PcapNetworkInterface networkInterfaceInsecure, PcapNetworkInterface networkInterfaceSecure,
+                         InetAddress authorizationAuthority, PacketPredicate... bypassPredicates) {
         this.networkInterfaceInsecure = Objects.requireNonNull(networkInterfaceInsecure);
         this.networkInterfaceSecure = Objects.requireNonNull(networkInterfaceSecure);
+        this.authorizationAuthority = Objects.requireNonNull(authorizationAuthority);
         this.egressQueueInsecure = new LinkedBlockingQueue<>();
         this.egressQueueSecure = new LinkedBlockingQueue<>();
         this.egressQueueMessage = new LinkedBlockingQueue<>();
@@ -67,7 +73,13 @@ public class NetworkBridge {
         this.egressQueueMessage.clear();
 
         // Initialize access controller
-        this.accessController = new AccessController(this.egressQueueMessage, this.egressQueueSecure);
+        List<PcapAddress> insecureAddresses = this.networkInterfaceInsecure.getAddresses();
+        if (insecureAddresses.isEmpty()) {
+            throw new IllegalStateException("Insecure network interface has no IP address.");
+        }
+        InetAddress authorizationScope = insecureAddresses.get(0).getAddress();
+        this.accessController = new AccessController(this.egressQueueMessage, this.egressQueueSecure,
+                this.authorizationAuthority, authorizationScope);
 
         // Specify ingress packet consumers
         Consumer<Packet> egressEnqueueInsecure = this.egressQueueInsecure::offer;

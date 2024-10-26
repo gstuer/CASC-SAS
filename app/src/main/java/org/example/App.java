@@ -16,6 +16,8 @@ import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.util.LinkLayerAddress;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 public class App {
@@ -72,6 +74,15 @@ public class App {
             return;
         }
 
+        InetAddress authorizationAuthority;
+        String authorizationAuthorityHostname = commandLine.getOptionValue("a");
+        try {
+            authorizationAuthority = InetAddress.getByName(authorizationAuthorityHostname);
+        } catch (UnknownHostException exception) {
+            System.err.println("Resolving authority hostname failed: " + exception.getMessage());
+            return;
+        }
+
         if (commandLine.hasOption("f")) {
             // Start forwarding traffic between the specified interfaces w/o access control
             System.out.printf("Forward Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
@@ -83,7 +94,7 @@ public class App {
             // Start forwarding traffic between the specified interfaces using a secured network bridge instance
             System.out.printf("Supervisory Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
             NetworkBridge networkBridge = new NetworkBridge(insecureNetworkInterface, secureNetworkInterface,
-                    new ArpPredicate(), new IcmpV4Predicate());
+                    authorizationAuthority, new ArpPredicate(), new IcmpV4Predicate());
             networkBridge.open();
         }
     }
@@ -123,6 +134,13 @@ public class App {
                 .desc("set the insecure interface of the program")
                 .numberOfArgs(1)
                 .argName("interface")
+                .required(enableRequiredOptions)
+                .build());
+        options.addOption(Option.builder("a")
+                .longOpt("authorization")
+                .desc("set the hostname or address of the authorization authority")
+                .numberOfArgs(1)
+                .argName("hostname")
                 .required(enableRequiredOptions)
                 .build());
         options.addOption(Option.builder("f")
