@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.AccessDecisionMessage;
+import com.gstuer.casc.common.message.AccessRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
@@ -42,6 +44,8 @@ public class JsonProcessor {
                 .registerSubtype(PayloadExchangeMessage.class)
                 .registerSubtype(KeyExchangeMessage.class)
                 .registerSubtype(KeyExchangeRequestMessage.class)
+                .registerSubtype(AccessRequestMessage.class)
+                .registerSubtype(AccessDecisionMessage.class)
                 .recognizeSubtypes();
         builder.registerTypeAdapterFactory(messageAdapterFactory);
         RuntimeTypeAdapterFactory<?> patternAdapterFactory = RuntimeTypeAdapterFactory
