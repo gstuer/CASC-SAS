@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RequestableAccessDecision extends RequestableResource<AccessDecision> {
     private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
-    private static final int REQUEST_RETRIES = 4;
+    private static final int REQUEST_RETRIES = 9;
 
     private final AccessRequestPattern pattern;
 

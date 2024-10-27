@@ -12,6 +12,8 @@ import com.gstuer.casc.common.pattern.PatternFactory;
 import org.pcap4j.packet.Packet;
 
 import java.net.InetAddress;
+import java.time.Duration;
+import java.time.temporal.TemporalAmount;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -21,6 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class AuthorizationManager {
+    private final TemporalAmount ACCESS_DECISION_VALIDITY_OFFSET = Duration.ofMillis(50);
+
     private final InetAddress authorizationAuthority;
     private final InetAddress authorizationScope;
     private final AuthenticationClient authenticationClient;
@@ -45,7 +49,8 @@ public class AuthorizationManager {
     public Optional<PayloadExchangeMessage> authorizeOutgoing(Packet packet) {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(packet);
         Optional<AccessDecision> optionalDecision = this.outgoingDecisions.stream().parallel()
-                .filter(decision -> pattern.contains(decision.getPattern()) && decision.isValid())
+                .filter(decision -> pattern.contains(decision.getPattern())
+                        && decision.isValid(ACCESS_DECISION_VALIDITY_OFFSET))
                 .findFirst();
 
         if (optionalDecision.isPresent()) {

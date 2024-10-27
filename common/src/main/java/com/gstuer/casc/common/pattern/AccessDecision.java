@@ -9,6 +9,7 @@ import com.gstuer.casc.common.serialization.SerializationException;
 
 import java.net.InetAddress;
 import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.Objects;
 
 /**
@@ -97,6 +98,18 @@ public class AccessDecision implements Signable, Comparable<AccessDecision> {
      */
     public boolean isValid() {
         return Instant.now().isBefore(this.validUntil);
+    }
+
+    /**
+     * Checks whether this access decision is valid at a specified time in the future. An access decision is valid if
+     * the current instant is within its validity period, i.e. before its expiration as indicated by
+     * {@link #getValidUntil()}.
+     *
+     * @param temporalOffset the offset from {@link Instant#now()} specifying the time for which the validity is checked
+     * @return {@code true} if the decision is valid at the specified time, {@code false} otherwise.
+     */
+    public boolean isValid(TemporalAmount temporalOffset) {
+        return Instant.now().plus(temporalOffset).isBefore(this.validUntil);
     }
 
     @Override
