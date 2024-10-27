@@ -54,6 +54,24 @@ public class AccessDecision implements Signable {
     }
 
     /**
+     * Checks whether this access decision is granting matching {@link AccessRequestPattern patterns}.
+     *
+     * @return {@code true} if decision grants a matching pattern, {@code false} otherwise.
+     */
+    public boolean isGranting() {
+        return this.action.equals(Action.GRANT);
+    }
+
+    /**
+     * Checks whether this access decision is denying matching {@link AccessRequestPattern patterns}.
+     *
+     * @return {@code true} if decision denies a matching pattern, {@code false} otherwise.
+     */
+    public boolean isDenying() {
+        return this.action.equals(Action.DENY);
+    }
+
+    /**
      * Gets the address of an PEP to which a matching frame should be forwarded to.
      *
      * @return the next hop address.

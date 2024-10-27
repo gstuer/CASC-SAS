@@ -90,9 +90,9 @@ public class AuthorizationController {
             // Check whether a specific deny decision exists
             // Note: A deny is "specific" if it contains all granted decision and is consequently the most specific match.
             List<AccessDecision> denyingDecisions = matchingDecisions.stream().parallel()
-                    .filter(decision -> decision.getAction().equals(AccessDecision.Action.DENY)).toList();
+                    .filter(AccessDecision::isDenying).toList();
             List<AccessDecision> grantingDecisions = matchingDecisions.stream().parallel()
-                    .filter(decision -> decision.getAction().equals(AccessDecision.Action.GRANT)).toList();
+                    .filter(AccessDecision::isGranting).toList();
             if (!denyingDecisions.isEmpty()) {
                 Optional<AccessDecision> specificDeny = denyingDecisions.stream().parallel()
                         .filter(deny -> grantingDecisions.stream().parallel()

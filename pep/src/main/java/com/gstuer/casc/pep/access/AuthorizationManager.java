@@ -52,7 +52,7 @@ public class AuthorizationManager {
 
         if (optionalDecision.isPresent()) {
             AccessDecision decision = optionalDecision.get();
-            if (decision.getAction().equals(AccessDecision.Action.GRANT)) {
+            if (decision.isGranting()) {
                 // Access Granted -> Construct unsigned payload exchange message
                 PayloadExchangeMessage message = new PayloadExchangeMessage(decision.getNextHop(), null, packet);
                 return Optional.of(message);
@@ -75,7 +75,7 @@ public class AuthorizationManager {
 
             // If decision was positive return unsigned payload exchange message, return empty optional otherwise
             PayloadExchangeMessage message = null;
-            if (decision.getAction().equals(AccessDecision.Action.GRANT)) {
+            if (decision.isGranting()) {
                 message = new PayloadExchangeMessage(decision.getNextHop(), null, packet);
             }
             return Optional.ofNullable(message);
@@ -92,7 +92,7 @@ public class AuthorizationManager {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(message.getPayload());
         Optional<AccessDecision> optionalDecision = this.incomingDecisions.entrySet().stream().parallel()
                 .filter(entry -> pattern.contains(entry.getKey())
-                        && entry.getValue().getAction().equals(AccessDecision.Action.GRANT)
+                        && entry.getValue().isGranting()
                         && entry.getValue().getValidUntil().isAfter(Instant.now()))
                 .map(Map.Entry::getValue)
                 .findFirst();
@@ -116,7 +116,7 @@ public class AuthorizationManager {
         AccessRequestPattern pattern = decision.getPattern();
         if (decision.getNextHop().equals(authorizationScope)) {
             // If nextHop equals own scope, decision is still valid, & is granted -> Add to incoming rules
-            if (decision.getAction().equals(AccessDecision.Action.GRANT)
+            if (decision.isGranting()
                     && decision.getValidUntil().isAfter(Instant.now())) {
                 // Only save granted decisions as incoming rules
                 this.incomingDecisions.put(pattern, decision);
