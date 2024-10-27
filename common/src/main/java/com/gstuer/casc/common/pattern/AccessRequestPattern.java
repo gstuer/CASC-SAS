@@ -9,8 +9,9 @@ import java.util.Objects;
 /**
  * A pattern that represents an access request in a network. The access request pattern is either used as a rule for
  * matching network traffic or it represents a specific packet of the network traffic that has to satisfy the network rules.
+ * Note: This class has a natural ordering that is inconsistent with equals.
  */
-public abstract class AccessRequestPattern implements Signable {
+public abstract class AccessRequestPattern implements Signable, Comparable<AccessRequestPattern> {
     public final AccessRequestPattern enclosedPattern;
 
     protected AccessRequestPattern(AccessRequestPattern enclosedPattern) {
@@ -122,5 +123,19 @@ public abstract class AccessRequestPattern implements Signable {
     @Override
     public byte[] getSigningData() {
         return this.enclosedPattern.getSigningData();
+    }
+
+    @Override
+    public int compareTo(AccessRequestPattern that) {
+        if (this.contains(that) && that.contains(this)) {
+            // Equal patterns
+            return 0;
+        } else if (this.contains(that)) {
+            return -1;
+        } else if (that.contains(this)) {
+            return 1;
+        }
+        // Unequal pattern without relation
+        return 0;
     }
 }

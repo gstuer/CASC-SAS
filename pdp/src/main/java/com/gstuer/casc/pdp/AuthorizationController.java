@@ -15,22 +15,21 @@ import org.pcap4j.util.MacAddress;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 
 public class AuthorizationController {
     private static final long FALLBACK_DENY_VALIDITY_MILLISECONDS = TimeUnit.SECONDS.toMillis(60);
 
     private final AuthenticationClient authenticationClient;
-    private final Set<AccessDecision> accessDecisions;
+    private final SortedSet<AccessDecision> accessDecisions;
     private final BlockingQueue<AccessControlMessage<?>> egressQueue;
 
     public AuthorizationController(BlockingQueue<AccessControlMessage<?>> egressQueue) {
-        this.accessDecisions = ConcurrentHashMap.newKeySet();
+        this.accessDecisions = new ConcurrentSkipListSet<>();
         this.egressQueue = egressQueue;
         this.authenticationClient = new AuthenticationClient(this.egressQueue);
 
@@ -72,12 +71,11 @@ public class AuthorizationController {
 
             // Get matching decisions for message
             AccessRequestPattern pattern = message.getPayload();
-            List<AccessDecision> matchingDecisions = this.accessDecisions.stream().parallel()
-                    .filter(decision -> pattern.contains(decision.getPattern()) && decision.isValid())
-                    .toList();
+            Optional<AccessDecision> optionalMatchingDecision = this.accessDecisions.stream().parallel()
+                    .filter(decision -> pattern.contains(decision.getPattern()) && decision.isValid()).findFirst();
 
             // Fallback to deny if no decision fits
-            if (matchingDecisions.isEmpty()) {
+            if (optionalMatchingDecision.isEmpty()) {
                 AccessDecision decision = new AccessDecision(pattern, AccessDecision.Action.DENY,
                         null, Instant.now().plusMillis(FALLBACK_DENY_VALIDITY_MILLISECONDS));
                 AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, decision);
@@ -86,38 +84,27 @@ public class AuthorizationController {
                 return;
             }
 
-            // Check whether a specific deny decision exists
-            // Note: A deny is "specific" if it contains all granted decision and is consequently the most specific match.
-            List<AccessDecision> denyingDecisions = matchingDecisions.stream().parallel()
-                    .filter(AccessDecision::isDenying).toList();
-            List<AccessDecision> grantingDecisions = matchingDecisions.stream().parallel()
-                    .filter(AccessDecision::isGranting).toList();
-            if (!denyingDecisions.isEmpty()) {
-                Optional<AccessDecision> specificDeny = denyingDecisions.stream().parallel()
-                        .filter(deny -> grantingDecisions.stream().parallel()
-                                .allMatch(grant -> deny.getPattern().contains(grant.getPattern())))
-                        .findFirst();
-                if (specificDeny.isPresent()) {
-                    AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, specificDeny.get());
-                    authenticationClient.signMessage(decisionMessage).ifPresent(this.egressQueue::offer);
-                    System.out.println("[PDP] Deny: Specific deny.");
+            AccessDecision decision = optionalMatchingDecision.get();
+            // Send decision to next hop if granted
+            if (decision.isGranting()) {
+                AccessDecisionMessage decisionMessage = new AccessDecisionMessage(decision.getNextHop(), null, decision);
+                Optional<AccessControlMessage<?>> optionalDecisionMessage = authenticationClient.signMessage(decisionMessage);
+                if (optionalDecisionMessage.isPresent()) {
+                    this.egressQueue.offer(optionalDecisionMessage.get());
+                } else {
+                    System.out.println("[PDP] Signing failed.");
                     return;
                 }
             }
 
-            // Return appropriate granting decision
-            // TODO Make patterns comparable to reduce search effort for most specific deny/grant
-            Optional<AccessDecision> grantingDecision = grantingDecisions.stream().findFirst();
-            if (grantingDecision.isPresent()) {
-                AccessDecisionMessage decisionMessageSource = new AccessDecisionMessage(message.getSource(), null, grantingDecision.get());
-                AccessDecisionMessage decisionMessageDestination = new AccessDecisionMessage(grantingDecision.get().getNextHop(), null, grantingDecision.get());
-                Optional<AccessControlMessage<?>> optionalMessageSource = authenticationClient.signMessage(decisionMessageSource);
-                Optional<AccessControlMessage<?>> optionalMessageDestination = authenticationClient.signMessage(decisionMessageDestination);
-                if (optionalMessageSource.isPresent() && optionalMessageDestination.isPresent()) {
-                    this.egressQueue.offer(optionalMessageDestination.get());
-                    this.egressQueue.offer(optionalMessageSource.get());
-                    System.out.printf("[PDP] Grant: %s -> %s.\n", message.getSource(), grantingDecision.get().getNextHop());
-                }
+            // Send decision to requester
+            AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, decision);
+            Optional<AccessControlMessage<?>> optionalDecisionMessage = authenticationClient.signMessage(decisionMessage);
+            if (optionalDecisionMessage.isPresent()) {
+                this.egressQueue.offer(optionalDecisionMessage.get());
+                System.out.printf("[PDP] Grant: %s -> %s.\n", message.getSource(), decision.getNextHop());
+            } else {
+                System.out.println("[PDP] Signing failed.");
                 return;
             }
         } else {

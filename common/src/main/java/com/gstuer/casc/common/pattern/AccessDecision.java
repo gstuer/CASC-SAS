@@ -14,7 +14,7 @@ import java.util.Objects;
 /**
  * Represents an access decision taken by a policy decision point (PDP) and enforced by a policy enforcement point (PEP).
  */
-public class AccessDecision implements Signable {
+public class AccessDecision implements Signable, Comparable<AccessDecision> {
     private final AccessRequestPattern pattern;
     private final Action action;
     private final InetAddress nextHop;
@@ -134,6 +134,25 @@ public class AccessDecision implements Signable {
     @Override
     public int hashCode() {
         return Objects.hash(pattern, action, nextHop, validUntil);
+    }
+
+    @Override
+    public int compareTo(AccessDecision that) {
+        int patternComparison = this.getPattern().compareTo(that.getPattern());
+        if (patternComparison != 0) {
+            // Related but unequal patterns
+            return patternComparison;
+        } else {
+            // Equal or unrelated patterns: Deny > Grant
+            if (this.isGranting() && that.isDenying()) {
+                return 1;
+            } else if (this.isDenying() && that.isGranting()) {
+                return -1;
+            } else {
+                // Same pattern, same action -> Fall back on hash values.
+                return Integer.compare(this.hashCode(), that.hashCode());
+            }
+        }
     }
 
     /**
