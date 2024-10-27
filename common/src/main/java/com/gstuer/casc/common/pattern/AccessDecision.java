@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public class AccessDecision implements Signable {
     private final AccessRequestPattern pattern;
-    private final Decision decision;
+    private final Action action;
     private final InetAddress nextHop;
     private final Instant validUntil;
 
@@ -24,13 +24,13 @@ public class AccessDecision implements Signable {
      * Constructs a new {@link AccessDecision access decision}.
      *
      * @param pattern    the access request pattern this decision is valid for
-     * @param decision   the decision taken for the access request pattern
+     * @param action     the action taken for the access request pattern
      * @param nextHop    the address of an PEP to which a matching frame should be forwarded to
      * @param validUntil the point in time until the taken decision is valid
      */
-    public AccessDecision(AccessRequestPattern pattern, Decision decision, InetAddress nextHop, Instant validUntil) {
+    public AccessDecision(AccessRequestPattern pattern, Action action, InetAddress nextHop, Instant validUntil) {
         this.pattern = Objects.requireNonNull(pattern);
-        this.decision = Objects.requireNonNull(decision);
+        this.action = Objects.requireNonNull(action);
         this.nextHop = Objects.requireNonNull(nextHop);
         this.validUntil = Objects.requireNonNull(validUntil);
     }
@@ -45,12 +45,12 @@ public class AccessDecision implements Signable {
     }
 
     /**
-     * Gets the {@link Decision decision} taken for the access request pattern.
+     * Gets the {@link Action action} to be taken for matching access request patterns.
      *
-     * @return the decision.
+     * @return the action.
      */
-    public Decision getDecision() {
-        return decision;
+    public Action getAction() {
+        return action;
     }
 
     /**
@@ -74,7 +74,7 @@ public class AccessDecision implements Signable {
     @Override
     public byte[] getSigningData() {
         byte[] patternBytes = this.pattern.getSigningData();
-        byte[] decisionBytes = Ints.toByteArray(this.decision.ordinal());
+        byte[] decisionBytes = Ints.toByteArray(this.action.ordinal());
         byte[] nextHopBytes = this.nextHop.getAddress();
         byte[] validUntilBytes = Longs.toByteArray(this.validUntil.toEpochMilli());
         return Bytes.concat(patternBytes, decisionBytes, nextHopBytes, validUntilBytes);
@@ -99,26 +99,27 @@ public class AccessDecision implements Signable {
         }
         AccessDecision that = (AccessDecision) object;
         return Objects.equals(pattern, that.pattern)
-                && decision == that.decision && Objects.equals(nextHop, that.nextHop)
+                && action == that.action && Objects.equals(nextHop, that.nextHop)
                 && Objects.equals(validUntil, that.validUntil);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(pattern, decision, nextHop, validUntil);
+        return Objects.hash(pattern, action, nextHop, validUntil);
     }
 
     /**
-     * Represents the result of a dynamic authorization of a policy decision point (PDP).
+     * Represents the action of an {@link AccessDecision access decision}, which must be taken for matching
+     * {@link AccessRequestPattern patterns} at a policy enforcement point (PEP).
      */
-    public enum Decision {
+    public enum Action {
         /**
-         * An access request is granted.
+         * An access request must be granted.
          */
-        GRANTED,
+        GRANT,
         /**
-         * An access request is denied.
+         * An access request must be denied.
          */
-        DENIED;
+        DENY;
     }
 }

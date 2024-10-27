@@ -15,7 +15,7 @@ public class App {
 
     public static void main(String[] args) {
         System.out.println("PDP - Policy Decision Point");
-        
+
         // Configure SLF4J logging verbosity
         System.setProperty("slf4j.internal.verbosity", "WARN");
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "WARN");

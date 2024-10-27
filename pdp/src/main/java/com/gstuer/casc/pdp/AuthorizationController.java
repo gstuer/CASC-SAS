@@ -45,9 +45,9 @@ public class AuthorizationController {
                 MacAddress.getByName("00:e0:4c:68:02:40"), EtherType.IPV4);
 
         try {
-            AccessDecision blueToBlackDecision = new AccessDecision(blueToBlackPattern, AccessDecision.Decision.GRANTED,
+            AccessDecision blueToBlackDecision = new AccessDecision(blueToBlackPattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(60));
-            AccessDecision blackToBlueDecision = new AccessDecision(blackToBluePattern, AccessDecision.Decision.GRANTED,
+            AccessDecision blackToBlueDecision = new AccessDecision(blackToBluePattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(60));
             this.accessDecisions.add(blueToBlackDecision);
             this.accessDecisions.add(blackToBlueDecision);
@@ -79,7 +79,7 @@ public class AuthorizationController {
 
             // Fallback to deny if no decision fits
             if (matchingDecisions.isEmpty()) {
-                AccessDecision decision = new AccessDecision(pattern, AccessDecision.Decision.DENIED,
+                AccessDecision decision = new AccessDecision(pattern, AccessDecision.Action.DENY,
                         null, Instant.now().plusMillis(FALLBACK_DENY_VALIDITY_MILLISECONDS));
                 AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, decision);
                 authenticationClient.signMessage(decisionMessage).ifPresent(this.egressQueue::offer);
@@ -90,9 +90,9 @@ public class AuthorizationController {
             // Check whether a specific deny decision exists
             // Note: A deny is "specific" if it contains all granted decision and is consequently the most specific match.
             List<AccessDecision> denyingDecisions = matchingDecisions.stream().parallel()
-                    .filter(decision -> decision.getDecision().equals(AccessDecision.Decision.DENIED)).toList();
+                    .filter(decision -> decision.getAction().equals(AccessDecision.Action.DENY)).toList();
             List<AccessDecision> grantingDecisions = matchingDecisions.stream().parallel()
-                    .filter(decision -> decision.getDecision().equals(AccessDecision.Decision.GRANTED)).toList();
+                    .filter(decision -> decision.getAction().equals(AccessDecision.Action.GRANT)).toList();
             if (!denyingDecisions.isEmpty()) {
                 Optional<AccessDecision> specificDeny = denyingDecisions.stream().parallel()
                         .filter(deny -> grantingDecisions.stream().parallel()

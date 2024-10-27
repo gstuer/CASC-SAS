@@ -162,9 +162,9 @@ public class JsonProcessorTest {
         JsonProcessor jsonProcessor = new JsonProcessor();
         AccessRequestPattern pattern = new UdpPattern(10000, 10001, null);
         InetAddress address = InetAddress.getByName("127.0.0.1");
-        AccessDecision.Decision decision = AccessDecision.Decision.GRANTED;
+        AccessDecision.Action action = AccessDecision.Action.GRANT;
         Instant validUntilNow = Instant.now();
-        AccessDecision accessDecision = new AccessDecision(pattern, decision, address, validUntilNow);
+        AccessDecision accessDecision = new AccessDecision(pattern, action, address, validUntilNow);
 
         // Execution
         byte[] serial = jsonProcessor.serialize(accessDecision);
@@ -174,7 +174,7 @@ public class JsonProcessorTest {
         assertNotNull(deserialized);
         assertEquals(pattern, deserialized.getPattern());
         assertEquals(address, deserialized.getNextHop());
-        assertEquals(decision, deserialized.getDecision());
+        assertEquals(action, deserialized.getAction());
         assertEquals(validUntilNow, deserialized.getValidUntil());
     }
 
@@ -185,9 +185,9 @@ public class JsonProcessorTest {
         JsonProcessor jsonProcessor = new JsonProcessor();
         AccessRequestPattern pattern = new UdpPattern(10000, 10001, null);
         InetAddress address = InetAddress.getByName("127.0.0.1");
-        AccessDecision.Decision decision = AccessDecision.Decision.GRANTED;
+        AccessDecision.Action action = AccessDecision.Action.GRANT;
         Instant validUntilNow = Instant.now();
-        AccessDecision accessDecision = new AccessDecision(pattern, decision, address, validUntilNow);
+        AccessDecision accessDecision = new AccessDecision(pattern, action, address, validUntilNow);
 
         //// Construct message
         DigitalSignature signature = new DigitalSignature(new byte[]{1, 2, 3, 4}, "test");
