@@ -15,6 +15,7 @@ import org.pcap4j.util.MacAddress;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
@@ -45,11 +46,13 @@ public class AuthorizationController {
 
         try {
             AccessDecision blueToBlackDecision = new AccessDecision(blueToBlackPattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(60));
+                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(15));
             AccessDecision blackToBlueDecision = new AccessDecision(blackToBluePattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(60));
+                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(15));
             this.accessDecisions.add(blueToBlackDecision);
             this.accessDecisions.add(blackToBlueDecision);
+            new Thread(new DecisionRefresher(blueToBlackDecision, TimeUnit.SECONDS.toMillis(15))).start();
+            new Thread(new DecisionRefresher(blackToBlueDecision, TimeUnit.SECONDS.toMillis(15))).start();
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
@@ -109,6 +112,39 @@ public class AuthorizationController {
             }
         } else {
             System.out.println("[PDP] Unknown message type.");
+        }
+    }
+
+    private final class DecisionRefresher implements Runnable {
+        private final static long REFRESH_THRESHOLD = 50;
+        private final static long SLEEP_OFFSET = 30;
+        private final long validityMilliseconds;
+        private AccessDecision decision;
+
+        private DecisionRefresher(AccessDecision decision, long validityMilliseconds) {
+            this.decision = Objects.requireNonNull(decision);
+            this.validityMilliseconds = validityMilliseconds;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("[PDP] Starting refresh thread.");
+            while (true) {
+                long timeLeft = Instant.now().until(decision.getValidUntil(), TimeUnit.MILLISECONDS.toChronoUnit());
+                if (timeLeft < REFRESH_THRESHOLD) {
+                    AccessDecision renewDecision = new AccessDecision(decision.getPattern(), decision.getAction(),
+                            decision.getNextHop(), Instant.now().plusMillis(this.validityMilliseconds));
+                    AuthorizationController.this.accessDecisions.remove(this.decision);
+                    AuthorizationController.this.accessDecisions.add(renewDecision);
+                    this.decision = renewDecision;
+                    continue;
+                }
+                try {
+                    Thread.sleep(timeLeft - SLEEP_OFFSET);
+                } catch (InterruptedException exception) {
+                    break;
+                }
+            }
         }
     }
 }
