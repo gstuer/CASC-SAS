@@ -73,7 +73,7 @@ public class AuthorizationManager {
 
             // If decision was positive return unsigned payload exchange message, return empty optional otherwise
             PayloadExchangeMessage message = null;
-            if (decision.isGranting()) {
+            if (decision.isGranting() && decision.isValid()) {
                 message = new PayloadExchangeMessage(decision.getNextHop(), null, packet);
             }
             return Optional.ofNullable(message);
@@ -111,7 +111,7 @@ public class AuthorizationManager {
         // Add decision to either the outgoing or incoming rules
         AccessDecision decision = message.getPayload();
         AccessRequestPattern pattern = decision.getPattern();
-        if (decision.getNextHop().equals(authorizationScope)) {
+        if (authorizationScope.equals(decision.getNextHop())) {
             // If nextHop equals own scope, decision is still valid, & is granted -> Add to incoming rules
             if (decision.isGranting() && decision.isValid()) {
                 // Only save granted decisions as incoming rules
@@ -120,6 +120,9 @@ public class AuthorizationManager {
         } else if (decision.isValid()) {
             // If nextHop does not equal own scope, add decision to outgoing rules and resolve possible waiting packets
             this.outgoingDecisions.put(pattern, decision);
+            this.resolveRequests(decision);
+        } else {
+            // If nextHop does not equal own scope and decision is not valid (anymore), only resolve waiting packets
             this.resolveRequests(decision);
         }
     }

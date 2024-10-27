@@ -31,7 +31,7 @@ public class AccessDecision implements Signable {
     public AccessDecision(AccessRequestPattern pattern, Action action, InetAddress nextHop, Instant validUntil) {
         this.pattern = Objects.requireNonNull(pattern);
         this.action = Objects.requireNonNull(action);
-        this.nextHop = Objects.requireNonNull(nextHop);
+        this.nextHop = nextHop;
         this.validUntil = Objects.requireNonNull(validUntil);
     }
 
@@ -74,7 +74,7 @@ public class AccessDecision implements Signable {
     /**
      * Gets the address of an PEP to which a matching frame should be forwarded to.
      *
-     * @return the next hop address.
+     * @return the next hop address if this {@link #isGranting()}, {@code null} otherwise.
      */
     public InetAddress getNextHop() {
         return nextHop;
@@ -103,7 +103,7 @@ public class AccessDecision implements Signable {
     public byte[] getSigningData() {
         byte[] patternBytes = this.pattern.getSigningData();
         byte[] decisionBytes = Ints.toByteArray(this.action.ordinal());
-        byte[] nextHopBytes = this.nextHop.getAddress();
+        byte[] nextHopBytes = this.nextHop != null ? this.nextHop.getAddress() : new byte[0];
         byte[] validUntilBytes = Longs.toByteArray(this.validUntil.toEpochMilli());
         return Bytes.concat(patternBytes, decisionBytes, nextHopBytes, validUntilBytes);
     }
