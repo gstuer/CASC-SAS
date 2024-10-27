@@ -89,6 +89,16 @@ public class AccessDecision implements Signable {
         return validUntil;
     }
 
+    /**
+     * Checks whether this access decision is currently valid. An access decision is valid if the current instant is
+     * within its validity period, i.e. before its expiration as indicated by {@link #getValidUntil()}.
+     *
+     * @return {@code true} if the decision is currently valid, {@code false} otherwise.
+     */
+    public boolean isValid() {
+        return Instant.now().isBefore(this.validUntil);
+    }
+
     @Override
     public byte[] getSigningData() {
         byte[] patternBytes = this.pattern.getSigningData();

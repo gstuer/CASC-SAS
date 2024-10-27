@@ -73,8 +73,7 @@ public class AuthorizationController {
             // Get matching decisions for message
             AccessRequestPattern pattern = message.getPayload();
             List<AccessDecision> matchingDecisions = this.accessDecisions.stream().parallel()
-                    .filter(decision -> pattern.contains(decision.getPattern())
-                            && decision.getValidUntil().isAfter(Instant.now()))
+                    .filter(decision -> pattern.contains(decision.getPattern()) && decision.isValid())
                     .toList();
 
             // Fallback to deny if no decision fits

@@ -12,7 +12,6 @@ import com.gstuer.casc.common.pattern.PatternFactory;
 import org.pcap4j.packet.Packet;
 
 import java.net.InetAddress;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,8 +44,7 @@ public class AuthorizationManager {
     public Optional<PayloadExchangeMessage> authorizeOutgoing(Packet packet) {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(packet);
         Optional<AccessDecision> optionalDecision = this.outgoingDecisions.entrySet().stream().parallel()
-                .filter(entry -> pattern.contains(entry.getKey())
-                        && entry.getValue().getValidUntil().isAfter(Instant.now()))
+                .filter(entry -> pattern.contains(entry.getKey()) && entry.getValue().isValid())
                 .map(Map.Entry::getValue)
                 .findFirst();
 
@@ -92,8 +90,7 @@ public class AuthorizationManager {
         AccessRequestPattern pattern = PatternFactory.derivePatternFrom(message.getPayload());
         Optional<AccessDecision> optionalDecision = this.incomingDecisions.entrySet().stream().parallel()
                 .filter(entry -> pattern.contains(entry.getKey())
-                        && entry.getValue().isGranting()
-                        && entry.getValue().getValidUntil().isAfter(Instant.now()))
+                        && entry.getValue().isGranting() && entry.getValue().isValid())
                 .map(Map.Entry::getValue)
                 .findFirst();
 
@@ -116,12 +113,11 @@ public class AuthorizationManager {
         AccessRequestPattern pattern = decision.getPattern();
         if (decision.getNextHop().equals(authorizationScope)) {
             // If nextHop equals own scope, decision is still valid, & is granted -> Add to incoming rules
-            if (decision.isGranting()
-                    && decision.getValidUntil().isAfter(Instant.now())) {
+            if (decision.isGranting() && decision.isValid()) {
                 // Only save granted decisions as incoming rules
                 this.incomingDecisions.put(pattern, decision);
             }
-        } else if (decision.getValidUntil().isAfter(Instant.now())) {
+        } else if (decision.isValid()) {
             // If nextHop does not equal own scope, add decision to outgoing rules and resolve possible waiting packets
             this.outgoingDecisions.put(pattern, decision);
             this.resolveRequests(decision);
