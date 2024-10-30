@@ -14,12 +14,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class RequestableAccessDecision extends RequestableResource<AccessDecision> {
-    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
-    private static final int REQUEST_RETRIES = 9;
+    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(250);
+    private static final int REQUEST_RETRIES = 3;
 
     private final AccessRequestPattern pattern;
 
-    public RequestableAccessDecision(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer signer,
+    public RequestableAccessDecision(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer<?> signer,
                                      InetAddress decisionProvider, AccessRequestPattern pattern) {
         super(messageEgress, signer, REQUEST_RETRIES, REQUEST_TIMEOUT_NANOS, decisionProvider);
         this.pattern = Objects.requireNonNull(pattern);

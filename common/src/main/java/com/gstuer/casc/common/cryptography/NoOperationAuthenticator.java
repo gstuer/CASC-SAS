@@ -1,8 +1,8 @@
 package com.gstuer.casc.common.cryptography;
 
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 /**
@@ -10,7 +10,7 @@ import java.util.Arrays;
  * This authenticator is intended to be used for performance measurement purposes only.
  * It should never be used in the context of security-critical applications.
  */
-public class NoOperationAuthenticator extends Authenticator {
+public class NoOperationAuthenticator extends Authenticator<Key, Key> {
     public static final String ALGORITHM_IDENTIFIER = "NoOperation";
     public static final byte[] SIGNATURE = new byte[]{0x0, 0x1};
 
@@ -20,17 +20,22 @@ public class NoOperationAuthenticator extends Authenticator {
     }
 
     @Override
-    public boolean verify(byte[] data, DigitalSignature signature) throws InvalidKeyException, SignatureException {
+    public boolean verify(byte[] data, DigitalSignature signature) {
         return Arrays.equals(SIGNATURE, signature.getData());
     }
 
     @Override
-    public void setVerificationKey(EncodedKey encodedVerificationKey) throws InvalidKeySpecException {
+    public void setVerificationKey(EncodedKey encodedVerificationKey) {
         // Accept every verification key
     }
 
     @Override
     public String getAlgorithmIdentifier() {
         return ALGORITHM_IDENTIFIER;
+    }
+
+    @Override
+    public void initializeKeyPair() {
+        // No keys required for signing & verification
     }
 }

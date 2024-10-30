@@ -2,7 +2,10 @@ package com.gstuer.casc.common.cryptography;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
@@ -39,7 +42,7 @@ import java.security.spec.X509EncodedKeySpec;
  * verifier.setVerificationKey(publicKey);
  * }</pre>
  */
-public class Ed25519Authenticator extends Authenticator {
+public class Ed25519Authenticator extends Authenticator<PrivateKey, PublicKey> {
     public static final String ALGORITHM_IDENTIFIER = "Ed25519";
 
     @Override
@@ -86,5 +89,19 @@ public class Ed25519Authenticator extends Authenticator {
     @Override
     public String getAlgorithmIdentifier() {
         return ALGORITHM_IDENTIFIER;
+    }
+
+    @Override
+    public void initializeKeyPair() {
+        KeyPairGenerator keyPairGenerator;
+        try {
+            keyPairGenerator = KeyPairGenerator.getInstance(ALGORITHM_IDENTIFIER);
+        } catch (NoSuchAlgorithmException exception) {
+            // Since the algorithm is static, this exception might only be thrown in case of an incompatible platform
+            throw new IllegalStateException(exception);
+        }
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        this.setSigningKey(keyPair.getPrivate());
+        this.setVerificationKey(keyPair.getPublic());
     }
 }

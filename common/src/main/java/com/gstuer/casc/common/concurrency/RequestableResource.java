@@ -17,7 +17,7 @@ public abstract class RequestableResource<T> {
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Condition empty = this.lock.writeLock().newCondition();
     private final BlockingQueue<AccessControlMessage<?>> messageEgress;
-    private final Signer signer;
+    private final Signer<?> signer;
     private final int retries;
     private final long timeoutNanos;
     private final InetAddress provider;
@@ -26,7 +26,7 @@ public abstract class RequestableResource<T> {
     private volatile T resource;
     private volatile LocalDateTime requestTime;
 
-    protected RequestableResource(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer signer, int retries,
+    protected RequestableResource(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer<?> signer, int retries,
                                   long timeoutNanos, InetAddress provider) {
         this.messageEgress = Objects.requireNonNull(messageEgress);
         this.signer = Objects.requireNonNull(signer);
@@ -106,7 +106,7 @@ public abstract class RequestableResource<T> {
         return provider;
     }
 
-    public Signer getSigner() {
+    public Signer<?> getSigner() {
         return signer;
     }
 

@@ -12,13 +12,13 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class RequestableVerifier extends RequestableResource<Verifier> {
-    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(50);
-    private static final int REQUEST_RETRIES = 4;
+public class RequestableVerifier extends RequestableResource<Verifier<?>> {
+    private static final long REQUEST_TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(250);
+    private static final int REQUEST_RETRIES = 3;
 
     private final String algorithmIdentifier;
 
-    public RequestableVerifier(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer signer,
+    public RequestableVerifier(BlockingQueue<AccessControlMessage<?>> messageEgress, Signer<?> signer,
                                InetAddress keyProvider, String algorithmIdentifier) {
         super(messageEgress, signer, REQUEST_RETRIES, REQUEST_TIMEOUT_NANOS, keyProvider);
         this.algorithmIdentifier = Objects.requireNonNull(algorithmIdentifier);

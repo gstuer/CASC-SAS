@@ -1,29 +1,30 @@
 package com.gstuer.casc.common.cryptography;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.Key;
 import java.util.Objects;
 
-public abstract class Authenticator implements Signer, Verifier {
-    private PrivateKey signingKey;
-    private PublicKey verificationKey;
+public abstract class Authenticator<S extends Key, V extends Key> implements Signer<S>, Verifier<V> {
+    private S signingKey;
+    private V verificationKey;
 
     @Override
-    public PublicKey getVerificationKey() {
+    public V getVerificationKey() {
         return this.verificationKey;
     }
 
     @Override
-    public void setVerificationKey(PublicKey verificationKey) {
+    public void setVerificationKey(V verificationKey) {
         this.verificationKey = Objects.requireNonNull(verificationKey);
     }
 
-    protected PrivateKey getSigningKey() {
+    public abstract void initializeKeyPair();
+
+    protected S getSigningKey() {
         return this.signingKey;
     }
 
     @Override
-    public void setSigningKey(PrivateKey signingKey) {
+    public void setSigningKey(S signingKey) {
         this.signingKey = Objects.requireNonNull(signingKey);
     }
 }
