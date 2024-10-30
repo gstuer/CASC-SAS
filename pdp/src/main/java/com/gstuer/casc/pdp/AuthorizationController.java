@@ -59,6 +59,7 @@ public class AuthorizationController {
     }
 
     public void handleRequest(AccessControlMessage<?> accessControlMessage) {
+        long arrivalTime = System.nanoTime();
         // Identify type of message
         if (accessControlMessage instanceof KeyExchangeMessage message) {
             // Forward message to authentication manager for processing
@@ -105,7 +106,8 @@ public class AuthorizationController {
             Optional<AccessControlMessage<?>> optionalDecisionMessage = authenticationClient.signMessage(decisionMessage);
             if (optionalDecisionMessage.isPresent()) {
                 this.egressQueue.offer(optionalDecisionMessage.get());
-                System.out.printf("[PDP] Grant: %s -> %s.\n", message.getSource(), decision.getNextHop());
+                System.out.printf("[PDP] Grant: %s -> %s. (took %d µs)\n", message.getSource(), decision.getNextHop(), TimeUnit.MICROSECONDS.toMillis(System.nanoTime() - arrivalTime));
+
             } else {
                 System.out.println("[PDP] Signing failed.");
                 return;
