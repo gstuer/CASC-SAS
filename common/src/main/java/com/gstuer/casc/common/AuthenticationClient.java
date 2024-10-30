@@ -5,6 +5,8 @@ import com.gstuer.casc.common.concurrency.exception.RequestTimeoutException;
 import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.cryptography.Ed25519Authenticator;
 import com.gstuer.casc.common.cryptography.EncodedKey;
+import com.gstuer.casc.common.cryptography.HmacAuthenticator;
+import com.gstuer.casc.common.cryptography.RsaAuthenticator;
 import com.gstuer.casc.common.cryptography.Signer;
 import com.gstuer.casc.common.cryptography.Verifier;
 import com.gstuer.casc.common.message.AccessControlMessage;
@@ -13,9 +15,6 @@ import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 
 import java.net.InetAddress;
 import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
@@ -26,34 +25,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class AuthenticationClient {
-    private final Authenticator authenticator;
+    private final Authenticator<?, ?> authenticator;
     private final ConcurrentMap<InetAddress, ConcurrentMap<String, RequestableVerifier>> verifiers;
     private final BlockingQueue<AccessControlMessage<?>> messageEgress;
 
     public AuthenticationClient(BlockingQueue<AccessControlMessage<?>> messageEgress) {
         this.messageEgress = Objects.requireNonNull(messageEgress);
         // Initialize the default signer for this manager
-        this.authenticator = new Ed25519Authenticator();
-        KeyPairGenerator keyPairGenerator;
-        try {
-            keyPairGenerator = KeyPairGenerator.getInstance(this.authenticator.getAlgorithmIdentifier());
-        } catch (NoSuchAlgorithmException exception) {
-            // Since the algorithm is static, this exception might only be thrown in case of an incompatible platform
-            throw new IllegalStateException(exception);
-        }
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        this.authenticator.setSigningKey(keyPair.getPrivate());
-        this.authenticator.setVerificationKey(keyPair.getPublic());
+        this.authenticator = new HmacAuthenticator();
+        this.authenticator.initializeKeyPair();
 
         // Initialize verifier map for external hosts
         this.verifiers = new ConcurrentHashMap<>();
     }
 
-    public Signer getSigner() {
+    public Signer<?> getSigner() {
         return this.authenticator;
     }
 
-    public Verifier getVerifier(String algorithmIdentifier, InetAddress externalHost) throws RequestTimeoutException {
+    public Verifier<?> getVerifier(String algorithmIdentifier, InetAddress externalHost) throws RequestTimeoutException {
         Map<String, RequestableVerifier> hostVerifiers = this.verifiers.computeIfAbsent(externalHost,
                 key -> new ConcurrentHashMap<>());
         RequestableVerifier verifier = hostVerifiers.computeIfAbsent(algorithmIdentifier,
@@ -89,17 +79,24 @@ public class AuthenticationClient {
 
         // TODO Replace with some kind of polymorphic verifier solution
         // Initialize public key & verifier based on encoded key material
-        Verifier verifier;
+        Verifier<?> verifier;
         try {
-            switch (algorithmIdentifier) {
-                case Ed25519Authenticator.ALGORITHM_IDENTIFIER:
-                    verifier = new Ed25519Authenticator();
-                    verifier.setVerificationKey(encodedKey);
-                    break;
-                default:
-                    System.err.println("[AM] Key exchange failed: Unknown algorithm.");
-                    return;
+            if (algorithmIdentifier.equals(Ed25519Authenticator.ALGORITHM_IDENTIFIER)) {
+                verifier = new Ed25519Authenticator();
+                verifier.setVerificationKey(encodedKey);
+            } else if (algorithmIdentifier.contains("withRSA")) {
+                // TODO Replace with non-magic-number solution
+                RsaAuthenticator.Algorithm algorithm = RsaAuthenticator.Algorithm.getByAlgorithmIdentifier(algorithmIdentifier);
+                verifier = new RsaAuthenticator(algorithm);
+                verifier.setVerificationKey(encodedKey);
+            } else if (algorithmIdentifier.equals(HmacAuthenticator.ALGORITHM_IDENTIFIER)) {
+                verifier = new HmacAuthenticator();
+                verifier.setVerificationKey(encodedKey);
+            } else {
+                System.err.println("[AM] Key exchange failed: Unknown algorithm.");
+                return;
             }
+
         } catch (InvalidKeySpecException exception) {
             System.err.println("[AM] Key exchange failed: " + exception.getMessage());
             return;
@@ -129,7 +126,7 @@ public class AuthenticationClient {
 
         // Get the appropriate verifier and verify the appended signature
         try {
-            Verifier verifier = this.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
+            Verifier<?> verifier = this.getVerifier(message.getSignature().getAlgorithmIdentifier(), source);
             return message.verify(verifier);
         } catch (SignatureException | InvalidKeyException | RequestTimeoutException exception) {
             System.out.println("[AM] Verification failed: " + exception.getMessage());
