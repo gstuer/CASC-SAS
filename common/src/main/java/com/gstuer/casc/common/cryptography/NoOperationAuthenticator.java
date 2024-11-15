@@ -1,5 +1,6 @@
 package com.gstuer.casc.common.cryptography;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.SignatureException;
@@ -36,6 +37,8 @@ public class NoOperationAuthenticator extends Authenticator<Key, Key> {
 
     @Override
     public void initializeKeyPair() {
-        // No keys required for signing & verification
+        Key key = new SecretKeySpec(ALGORITHM_IDENTIFIER.getBytes(), ALGORITHM_IDENTIFIER);
+        this.setSigningKey(key);
+        this.setVerificationKey(key);
     }
 }
