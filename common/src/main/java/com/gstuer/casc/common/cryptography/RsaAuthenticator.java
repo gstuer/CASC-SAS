@@ -19,6 +19,7 @@ import java.util.Objects;
  * digest.
  */
 public class RsaAuthenticator extends Authenticator<PrivateKey, PublicKey> {
+    public final static String ALGORITHM_IDENTIFIER_SUFFIX = "withRSA";
     public final Algorithm algorithm;
 
     public RsaAuthenticator(Algorithm algorithm) {
@@ -87,16 +88,16 @@ public class RsaAuthenticator extends Authenticator<PrivateKey, PublicKey> {
     }
 
     public enum Algorithm {
-        SHA2_256("SHA256withRSA"),
-        SHA2_521("SHA512withRSA"),
-        SHA3_256("SHA3-256withRSA"),
-        SHA3_521("SHA3-512withRSA"),
-        MD5("MD5withRSA");
+        SHA2_256("SHA256"),
+        SHA2_521("SHA512"),
+        SHA3_256("SHA3-256"),
+        SHA3_521("SHA3-512"),
+        MD5("MD5");
 
         private final String algorithmIdentifier;
 
-        private Algorithm(String algorithmIdentifier) {
-            this.algorithmIdentifier = Objects.requireNonNull(algorithmIdentifier);
+        private Algorithm(String digestIdentifier) {
+            this.algorithmIdentifier = Objects.requireNonNull(digestIdentifier) + ALGORITHM_IDENTIFIER_SUFFIX;
         }
 
         public static Algorithm getByAlgorithmIdentifier(String algorithmIdentifier) {

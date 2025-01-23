@@ -1,5 +1,7 @@
 package com.gstuer.casc.pep;
 
+import com.gstuer.casc.common.cryptography.Authenticator;
+import com.gstuer.casc.common.cryptography.AuthenticatorFactory;
 import com.gstuer.casc.pep.forwarding.ForwardingBridge;
 import com.gstuer.casc.pep.predicate.ArpPredicate;
 import com.gstuer.casc.pep.predicate.IcmpV4Predicate;
@@ -18,6 +20,7 @@ import org.pcap4j.util.LinkLayerAddress;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Optional;
 
 public class App {
     public static void main(String[] args) {
@@ -73,14 +76,33 @@ public class App {
             return;
         }
 
+        // Parse authorization authority (PDP) address from command line arguments
         InetAddress authorizationAuthority;
-        String authorizationAuthorityHostname = commandLine.getOptionValue("a");
+        String authorizationAuthorityHostname = commandLine.getOptionValue("authorization");
         try {
             authorizationAuthority = InetAddress.getByName(authorizationAuthorityHostname);
         } catch (UnknownHostException exception) {
-            System.err.println("Resolving authority hostname failed: " + exception.getMessage());
+            System.err.println("Resolving authorization authority hostname failed: " + exception.getMessage());
             return;
         }
+
+        // Parse authentication authority (KGC) address from command line arguments
+        InetAddress authenticationAuthority;
+        String authenticationAuthorityHostname = commandLine.getOptionValue("authentication");
+        try {
+            authenticationAuthority = InetAddress.getByName(authenticationAuthorityHostname);
+        } catch (UnknownHostException exception) {
+            System.err.println("Resolving authentication authority hostname failed: " + exception.getMessage());
+            return;
+        }
+
+        // Parse authenticator from command line arguments
+        Optional<Authenticator<?, ?>> optionalAuthenticator = AuthenticatorFactory.createByIdentifier(commandLine.getOptionValue("crypto"));
+        if (optionalAuthenticator.isEmpty()) {
+            System.err.println("Parsing cryptographic algorithm failed: Unknown algorithm.");
+            return;
+        }
+        Authenticator<?, ?> authenticator = optionalAuthenticator.get();
 
         if (commandLine.hasOption("f")) {
             // Start forwarding traffic between the specified interfaces w/o access control
@@ -93,7 +115,7 @@ public class App {
             // Start forwarding traffic between the specified interfaces using a secured network bridge instance
             System.out.printf("Supervisory Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
             NetworkBridge networkBridge = new NetworkBridge(insecureNetworkInterface, secureNetworkInterface,
-                    authorizationAuthority, new ArpPredicate(), new IcmpV4Predicate());
+                    authorizationAuthority, authenticationAuthority, authenticator, new ArpPredicate(), new IcmpV4Predicate());
             networkBridge.open();
         }
     }
@@ -135,11 +157,25 @@ public class App {
                 .argName("interface")
                 .required(enableRequiredOptions)
                 .build());
-        options.addOption(Option.builder("a")
+        options.addOption(Option.builder()
                 .longOpt("authorization")
                 .desc("set the hostname or address of the authorization authority")
                 .numberOfArgs(1)
                 .argName("hostname")
+                .required(enableRequiredOptions)
+                .build());
+        options.addOption(Option.builder()
+                .longOpt("authentication")
+                .desc("set the hostname or address of the authentication authority")
+                .numberOfArgs(1)
+                .argName("hostname")
+                .required(enableRequiredOptions)
+                .build());
+        options.addOption(Option.builder()
+                .longOpt("crypto")
+                .desc("set the cryptographic algorithm used for authentication")
+                .numberOfArgs(1)
+                .argName("algorithm")
                 .required(enableRequiredOptions)
                 .build());
         options.addOption(Option.builder("f")

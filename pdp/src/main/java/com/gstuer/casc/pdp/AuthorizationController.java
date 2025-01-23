@@ -1,6 +1,7 @@
 package com.gstuer.casc.pdp;
 
 import com.gstuer.casc.common.AuthenticationClient;
+import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
@@ -29,10 +30,11 @@ public class AuthorizationController {
     private final SortedSet<AccessDecision> accessDecisions;
     private final BlockingQueue<AccessControlMessage<?>> egressQueue;
 
-    public AuthorizationController(BlockingQueue<AccessControlMessage<?>> egressQueue) {
+    public AuthorizationController(BlockingQueue<AccessControlMessage<?>> egressQueue,
+                                   InetAddress authenticationAuthority, Authenticator<?, ?> authenticator) {
         this.accessDecisions = new ConcurrentSkipListSet<>();
         this.egressQueue = egressQueue;
-        this.authenticationClient = new AuthenticationClient(this.egressQueue);
+        this.authenticationClient = new AuthenticationClient(authenticationAuthority, authenticator, this.egressQueue);
 
         // TODO Remove static rules
         /* MAC Addresses

@@ -1,6 +1,7 @@
 package com.gstuer.casc.pep.access;
 
 import com.gstuer.casc.common.AuthenticationClient;
+import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
@@ -20,10 +21,11 @@ public class AccessController {
     private final AuthorizationManager authorizationManager;
 
     public AccessController(BlockingQueue<AccessControlMessage<?>> messageEgress, BlockingQueue<Packet> packetEgress,
-                            InetAddress authorizationAuthority, InetAddress authorizationScope) {
+                            InetAddress authorizationAuthority, InetAddress authorizationScope,
+                            InetAddress authenticationAuthority, Authenticator<?, ?> authenticator) {
         this.messageEgress = Objects.requireNonNull(messageEgress);
         this.packetEgress = Objects.requireNonNull(packetEgress);
-        this.authenticationClient = new AuthenticationClient(this.messageEgress);
+        this.authenticationClient = new AuthenticationClient(authenticationAuthority, authenticator, this.messageEgress);
         this.authorizationManager = new AuthorizationManager(authorizationAuthority, authorizationScope,
                 this.authenticationClient, this.messageEgress);
     }

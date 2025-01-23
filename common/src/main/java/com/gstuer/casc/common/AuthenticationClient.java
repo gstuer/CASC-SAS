@@ -3,10 +3,8 @@ package com.gstuer.casc.common;
 import com.gstuer.casc.common.concurrency.RequestableVerifier;
 import com.gstuer.casc.common.concurrency.exception.RequestTimeoutException;
 import com.gstuer.casc.common.cryptography.Authenticator;
-import com.gstuer.casc.common.cryptography.Ed25519Authenticator;
+import com.gstuer.casc.common.cryptography.AuthenticatorFactory;
 import com.gstuer.casc.common.cryptography.EncodedKey;
-import com.gstuer.casc.common.cryptography.HmacAuthenticator;
-import com.gstuer.casc.common.cryptography.RsaAuthenticator;
 import com.gstuer.casc.common.cryptography.Signer;
 import com.gstuer.casc.common.cryptography.Verifier;
 import com.gstuer.casc.common.message.AccessControlMessage;
@@ -25,15 +23,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class AuthenticationClient {
+    private final InetAddress authority;
     private final Authenticator<?, ?> authenticator;
     private final ConcurrentMap<InetAddress, ConcurrentMap<String, RequestableVerifier>> verifiers;
     private final BlockingQueue<AccessControlMessage<?>> messageEgress;
 
-    public AuthenticationClient(BlockingQueue<AccessControlMessage<?>> messageEgress) {
-        this.messageEgress = Objects.requireNonNull(messageEgress);
-        // Initialize the default signer for this manager
-        this.authenticator = new HmacAuthenticator();
+    public AuthenticationClient(InetAddress authority, Authenticator<?, ?> authenticator,
+                                BlockingQueue<AccessControlMessage<?>> messageEgress) {
+        this.authority = Objects.requireNonNull(authority);
+        this.authenticator = authenticator;
         this.authenticator.initializeKeyPair();
+        this.messageEgress = Objects.requireNonNull(messageEgress);
 
         // Initialize verifier map for external hosts
         this.verifiers = new ConcurrentHashMap<>();
@@ -81,22 +81,14 @@ public class AuthenticationClient {
         // Initialize public key & verifier based on encoded key material
         Verifier<?> verifier;
         try {
-            if (algorithmIdentifier.equals(Ed25519Authenticator.ALGORITHM_IDENTIFIER)) {
-                verifier = new Ed25519Authenticator();
-                verifier.setVerificationKey(encodedKey);
-            } else if (algorithmIdentifier.contains("withRSA")) {
-                // TODO Replace with non-magic-number solution
-                RsaAuthenticator.Algorithm algorithm = RsaAuthenticator.Algorithm.getByAlgorithmIdentifier(algorithmIdentifier);
-                verifier = new RsaAuthenticator(algorithm);
-                verifier.setVerificationKey(encodedKey);
-            } else if (algorithmIdentifier.equals(HmacAuthenticator.ALGORITHM_IDENTIFIER)) {
-                verifier = new HmacAuthenticator();
+            Optional<Authenticator<?, ?>> optionalAuthenticator = AuthenticatorFactory.createByIdentifier(algorithmIdentifier);
+            if (optionalAuthenticator.isPresent()) {
+                verifier = optionalAuthenticator.get();
                 verifier.setVerificationKey(encodedKey);
             } else {
                 System.err.println("[AM] Key exchange failed: Unknown algorithm.");
                 return;
             }
-
         } catch (InvalidKeySpecException exception) {
             System.err.println("[AM] Key exchange failed: " + exception.getMessage());
             return;

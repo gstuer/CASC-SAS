@@ -1,5 +1,6 @@
 package com.gstuer.casc.pep;
 
+import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.egress.AccessControlMessageEgressHandler;
 import com.gstuer.casc.common.egress.PacketEgressHandler;
 import com.gstuer.casc.common.ingress.AccessControlMessageIngressHandler;
@@ -28,6 +29,8 @@ public class NetworkBridge {
     private final PcapNetworkInterface networkInterfaceInsecure;
     private final PcapNetworkInterface networkInterfaceSecure;
     private final InetAddress authorizationAuthority;
+    private final InetAddress authenticationAuthority;
+    private final Authenticator<?, ?> authenticator;
     private final BlockingQueue<Packet> egressQueueInsecure;
     private final BlockingQueue<Packet> egressQueueSecure;
     private final BlockingQueue<AccessControlMessage<?>> egressQueueMessage;
@@ -43,10 +46,15 @@ public class NetworkBridge {
     private ExecutorService threadPool;
 
     public NetworkBridge(PcapNetworkInterface networkInterfaceInsecure, PcapNetworkInterface networkInterfaceSecure,
-                         InetAddress authorizationAuthority, PacketPredicate... bypassPredicates) {
+                         InetAddress authorizationAuthority, InetAddress authenticationAuthority,
+                         Authenticator<?, ?> authenticator, PacketPredicate... bypassPredicates) {
         this.networkInterfaceInsecure = Objects.requireNonNull(networkInterfaceInsecure);
         this.networkInterfaceSecure = Objects.requireNonNull(networkInterfaceSecure);
+
         this.authorizationAuthority = Objects.requireNonNull(authorizationAuthority);
+        this.authenticationAuthority = Objects.requireNonNull(authenticationAuthority);
+        this.authenticator = Objects.requireNonNull(authenticator);
+
         this.egressQueueInsecure = new LinkedBlockingQueue<>();
         this.egressQueueSecure = new LinkedBlockingQueue<>();
         this.egressQueueMessage = new LinkedBlockingQueue<>();
@@ -79,7 +87,7 @@ public class NetworkBridge {
         }
         InetAddress authorizationScope = insecureAddresses.get(0).getAddress();
         this.accessController = new AccessController(this.egressQueueMessage, this.egressQueueSecure,
-                this.authorizationAuthority, authorizationScope);
+                this.authorizationAuthority, authorizationScope, this.authenticationAuthority, authenticator);
 
         // Specify ingress packet consumers
         Consumer<Packet> egressEnqueueInsecure = this.egressQueueInsecure::offer;
