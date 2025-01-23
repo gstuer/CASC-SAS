@@ -58,6 +58,50 @@ public class AuthorizationController {
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
+
+        /* Rules for lab evaluation
+        EthernetPattern blueToBlack1Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
+                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP"));
+        EthernetPattern blueToBlack2Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
+                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88f7, "Unknown"));
+        EthernetPattern blackToBlue1Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
+                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP"));
+        EthernetPattern blackToBlue2Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
+                MacAddress.getByName("01:0c:cd:01:01:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+        EthernetPattern blackToBlue3Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
+                MacAddress.getByName("01:80:c2:00:00:00"), new EtherType((short) 0x0027, "Unknown"));
+        EthernetPattern blackToBlue4Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
+                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88cc, "Unknown"));
+
+        try {
+            AccessDecision blueToBlackDecision1 = new AccessDecision(blueToBlack1Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(10));
+            AccessDecision blueToBlackDecision2 = new AccessDecision(blueToBlack2Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(10));
+            AccessDecision blackToBlueDecision1 = new AccessDecision(blackToBlue1Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
+            AccessDecision blackToBlueDecision2 = new AccessDecision(blackToBlue2Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
+            AccessDecision blackToBlueDecision3 = new AccessDecision(blackToBlue3Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
+            AccessDecision blackToBlueDecision4 = new AccessDecision(blackToBlue4Pattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
+            this.accessDecisions.add(blueToBlackDecision1);
+            this.accessDecisions.add(blueToBlackDecision2);
+            this.accessDecisions.add(blackToBlueDecision1);
+            this.accessDecisions.add(blackToBlueDecision2);
+            this.accessDecisions.add(blackToBlueDecision3);
+            this.accessDecisions.add(blackToBlueDecision4);
+            new Thread(new DecisionRefresher(blueToBlackDecision1, TimeUnit.SECONDS.toMillis(10))).start();
+            new Thread(new DecisionRefresher(blueToBlackDecision2, TimeUnit.SECONDS.toMillis(10))).start();
+            new Thread(new DecisionRefresher(blackToBlueDecision1, TimeUnit.SECONDS.toMillis(10))).start();
+            new Thread(new DecisionRefresher(blackToBlueDecision2, TimeUnit.SECONDS.toMillis(10))).start();
+            new Thread(new DecisionRefresher(blackToBlueDecision3, TimeUnit.SECONDS.toMillis(10))).start();
+            new Thread(new DecisionRefresher(blackToBlueDecision4, TimeUnit.SECONDS.toMillis(10))).start();
+        } catch (UnknownHostException exception) {
+            throw new IllegalStateException(exception);
+        }
+        */
     }
 
     public void handleRequest(AccessControlMessage<?> accessControlMessage) {
