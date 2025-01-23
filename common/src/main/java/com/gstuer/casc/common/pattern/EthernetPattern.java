@@ -20,7 +20,7 @@ public class EthernetPattern extends AccessRequestPattern {
         super(enclosedPattern);
         this.source = Objects.requireNonNull(sourceAddress);
         this.destination = Objects.requireNonNull(destinationAddress);
-        this.etherType = Objects.requireNonNull(etherType);
+        this.etherType = etherType;
     }
 
     public MacAddress getSource() {
@@ -48,7 +48,7 @@ public class EthernetPattern extends AccessRequestPattern {
         }
         EthernetPattern that = (EthernetPattern) object;
         return Objects.equals(this.source, that.source) && Objects.equals(this.destination, that.destination)
-                && Objects.equals(this.etherType, that.etherType);
+                && Objects.equals(this.etherType.value(), that.etherType.value());
     }
 
     @Override
@@ -61,7 +61,7 @@ public class EthernetPattern extends AccessRequestPattern {
         }
         EthernetPattern that = (EthernetPattern) object;
         return Objects.equals(this.source, that.source) && Objects.equals(this.destination, that.destination)
-                && Objects.equals(this.etherType, that.etherType);
+                && Objects.equals(this.etherType.value(), that.etherType.value());
     }
 
     @Override
