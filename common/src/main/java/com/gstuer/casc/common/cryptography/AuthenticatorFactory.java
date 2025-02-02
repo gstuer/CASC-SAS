@@ -17,6 +17,8 @@ public final class AuthenticatorFactory {
             authenticator = new HmacAuthenticator();
         } else if (algorithmIdentifier.equals(NoOperationAuthenticator.ALGORITHM_IDENTIFIER)) {
             authenticator = new NoOperationAuthenticator();
+        } else if (algorithmIdentifier.equals(CasaAuthenticator.ALGORITHM_IDENTIFIER)) {
+            authenticator = new CasaAuthenticator();
         }
         return Optional.ofNullable(authenticator);
     }
