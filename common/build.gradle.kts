@@ -28,6 +28,10 @@ dependencies {
     implementation("org.pcap4j:pcap4j-packetfactory-static:1.+")
     implementation("org.slf4j:slf4j-simple:2+")
     implementation("com.google.code.gson:gson:2+")
+    implementation(files("../libs/jpbc-2.0.0/jars/jpbc-api-2.0.0.jar"))
+    implementation(files("../libs/jpbc-2.0.0/jars/jpbc-plaf-2.0.0.jar"))
+    implementation(files("../libs/jpbc-2.0.0/jars/jpbc-pbc-2.0.0.jar"))
+    implementation(files("../libs/jpbc-2.0.0/jars/jna-3.2.5.jar"))
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
