@@ -1,6 +1,6 @@
 from Communicator import Communicator
 from Entity import Entity, printTimed
-from statistics import fmean
+from statistics import fmean, median, stdev
 import json
 import sys
 import time
@@ -63,10 +63,37 @@ if __name__ == "__main__":
     endTime = time.time_ns()
 
     if roundTripTimes is None:
-        printTimed("Estimation failed: Connection initilization not successful.")
+        printTimed("Estimation failed: Connection initialization not successful.")
     else:
-        roundTripTimes = [x for x in roundTripTimes if x is not None]
-        printTimed(f"Estimation successful.\nMin:{min(roundTripTimes)} Max:{max(roundTripTimes)} Avg:{fmean(roundTripTimes)} Lost:{readings - len(roundTripTimes)} PPS:{readings / (endTime - startTime) * pow(10, 9)}")
-        estimation = {"label": label, "roundTripTimes": roundTripTimes}
+        roundTripTimes = [x / pow(10, 6) for x in roundTripTimes if x is not None]
+        lost = readings - len(roundTripTimes)
+        pps = readings / (endTime - startTime) * pow(10, 9)
+        meanTime = fmean(roundTripTimes)
+        medianTime = median(roundTripTimes)
+        standardDeviation = stdev(roundTripTimes)
+        maxTime = max(roundTripTimes)
+        minTime = min(roundTripTimes)
+        minMaxRange = maxTime - minTime
+        minMaxMidRange = (minTime + maxTime) / 2
+        lowLatencyReadings = sum(1 for time in roundTripTimes if time <= 6)
+        mediumLatencyReadings = sum(1 for time in roundTripTimes if time <= 20)
+        highLatencyReadings = sum(1 for time in roundTripTimes if time <= 500)
+        printTimed(f"Estimation successful.\nMin:{minTime}ms Max:{maxTime}ms Avg:{meanTime}ms Lost:{lost} PPS:{pps}")
+
+        # Combine data for output file
+        estimation = {"label": label,
+        "lost": lost,
+        "pps": pps,
+        "mean": meanTime,
+        "median": medianTime,
+        "standardDeviation": standardDeviation,
+        "max": maxTime,
+        "min": minTime,
+        "minMaxMidrange": minMaxMidRange,
+        "minMaxRange": minMaxRange,
+        "lowLatencyReadings": lowLatencyReadings,
+        "mediumLatencyReadings": mediumLatencyReadings,
+        "highLatencyReadings": highLatencyReadings,
+        "roundTripTimes": roundTripTimes}
         with open("./" + label + ".json", "w") as file:
             json.dump(estimation, file)
