@@ -3,7 +3,7 @@ package com.gstuer.casc.common.concurrency;
 import com.gstuer.casc.common.cryptography.Signer;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
-import com.gstuer.casc.common.pattern.AccessDecision;
+import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 
 import java.net.InetAddress;

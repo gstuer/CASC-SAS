@@ -6,7 +6,7 @@ import com.gstuer.casc.common.concurrency.exception.RequestTimeoutException;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
-import com.gstuer.casc.common.pattern.AccessDecision;
+import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.PatternFactory;
 import org.pcap4j.packet.Packet;

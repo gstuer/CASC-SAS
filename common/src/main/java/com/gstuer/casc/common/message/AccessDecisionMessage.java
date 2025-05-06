@@ -2,7 +2,7 @@ package com.gstuer.casc.common.message;
 
 import com.gstuer.casc.common.cryptography.DigitalSignature;
 import com.gstuer.casc.common.cryptography.Signer;
-import com.gstuer.casc.common.pattern.AccessDecision;
+import com.gstuer.casc.common.AccessDecision;
 
 import java.io.Serial;
 import java.net.InetAddress;

@@ -8,7 +8,7 @@ import com.gstuer.casc.common.message.AccessRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
-import com.gstuer.casc.common.pattern.AccessDecision;
+import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import com.gstuer.casc.common.pattern.IpPattern;

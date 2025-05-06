@@ -1,9 +1,10 @@
-package com.gstuer.casc.common.pattern;
+package com.gstuer.casc.common;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.gstuer.casc.common.cryptography.Signable;
+import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.serialization.JsonProcessor;
 import com.gstuer.casc.common.serialization.SerializationException;
 
