@@ -8,7 +8,17 @@ import com.gstuer.casc.common.time.InstantUtility;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Represents a {@link PredicateTree tree of predicates} that uses the logical AND-operator to evaluate its underlying
+ * {@link PolicyPredicate policy predicates}.
+ */
 public class AndTree extends PredicateTree {
+    /**
+     * Constructs a new {@link AndTree}.
+     *
+     * @param leftChild  first child node of the tree
+     * @param rightChild second child node of the tree
+     */
     public AndTree(PolicyPredicate leftChild, PolicyPredicate rightChild) {
         super(leftChild, rightChild);
     }

@@ -8,7 +8,17 @@ import com.gstuer.casc.common.time.InstantUtility;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Represents a {@link PredicateTree tree of predicates} that uses the logical OR-operator to evaluate its underlying
+ * {@link PolicyPredicate policy predicates}.
+ */
 public class OrTree extends PredicateTree {
+    /**
+     * Constructs a new {@link OrTree}.
+     *
+     * @param leftChild  first child node of the tree
+     * @param rightChild second child node of the tree
+     */
     public OrTree(PolicyPredicate leftChild, PolicyPredicate rightChild) {
         super(leftChild, rightChild);
     }
