@@ -6,12 +6,19 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.function.Predicate;
 
+/**
+ * Represents a function
+ */
 public abstract class PolicyPredicate implements Predicate<Map<String, PolicyAttribute<?>>> {
-    public abstract Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes);
+    public abstract Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) throws UnavailableAttributeException;
 
     @Override
     public boolean test(Map<String, PolicyAttribute<?>> attributes) {
-        return this.evaluate(attributes).isPositive();
+        try {
+            return this.evaluate(attributes).isPositive();
+        } catch (UnavailableAttributeException exception) {
+            return false;
+        }
     }
 
     public static final class Evaluation {

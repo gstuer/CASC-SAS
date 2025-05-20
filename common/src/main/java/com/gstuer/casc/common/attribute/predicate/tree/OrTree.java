@@ -2,6 +2,7 @@ package com.gstuer.casc.common.attribute.predicate.tree;
 
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
+import com.gstuer.casc.common.attribute.predicate.UnavailableAttributeException;
 import com.gstuer.casc.common.time.InstantUtility;
 
 import java.time.Instant;
@@ -13,8 +14,9 @@ public class OrTree extends PredicateTree {
     }
 
     @Override
-    public Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) {
+    public Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) throws UnavailableAttributeException {
         // Evaluate child predicates
+        // TODO Only throw unavail. attr. except. if neither left nor right can be evaluated
         Evaluation left = getLeftChild().evaluate(attributes);
         Evaluation right = getRightChild().evaluate(attributes);
 

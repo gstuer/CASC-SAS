@@ -2,9 +2,13 @@ package com.gstuer.casc.common;
 
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
+import com.gstuer.casc.common.attribute.predicate.UnavailableAttributeException;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 
 import java.net.InetAddress;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.Map;
 
 /**
@@ -15,6 +19,7 @@ import java.util.Map;
 public class AccessPolicy {
     private static final AccessDecision.Action DEFAULT_ACTION = AccessDecision.Action.DENY;
     private static final InetAddress DEFAULT_NEXT_HOP = null;
+    private static final TemporalAmount DEFAULT_VALIDITY = Duration.ofSeconds(60);
 
     private final AccessRequestPattern flowPattern;
     private final AccessDecision.Action action;
@@ -44,7 +49,16 @@ public class AccessPolicy {
      * @return an {@link AccessDecision access decision} derived from this {@link AccessPolicy access policy}.
      */
     public AccessDecision evaluate(Map<String, PolicyAttribute<?>> attributes) {
-        PolicyPredicate.Evaluation evaluation = predicate.evaluate(attributes);
+        PolicyPredicate.Evaluation evaluation;
+        try {
+            // Evaluation was possible for current system state
+            evaluation = predicate.evaluate(attributes);
+        } catch (UnavailableAttributeException exception) {
+            // Evaluation was not possible due to unavailable attribute values
+            // -> Should only happen during initial attribute fetching phase.
+            return new AccessDecision(flowPattern, DEFAULT_ACTION, DEFAULT_NEXT_HOP, Instant.now().plus(DEFAULT_VALIDITY));
+        }
+
         if (evaluation.isPositive()) {
             return new AccessDecision(flowPattern, action, nextHop, evaluation.getEndOfValidity());
         } else {
