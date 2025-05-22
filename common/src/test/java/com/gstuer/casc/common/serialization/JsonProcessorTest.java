@@ -1,14 +1,19 @@
 package com.gstuer.casc.common.serialization;
 
+import com.gstuer.casc.common.AccessDecision;
+import com.gstuer.casc.common.attribute.LongAttribute;
+import com.gstuer.casc.common.attribute.PolicyAttribute;
+import com.gstuer.casc.common.attribute.StringAttribute;
 import com.gstuer.casc.common.cryptography.DigitalSignature;
 import com.gstuer.casc.common.cryptography.EncodedKey;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
+import com.gstuer.casc.common.message.AttributeExchangeMessage;
+import com.gstuer.casc.common.message.AttributeExchangeRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
-import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import com.gstuer.casc.common.pattern.IpPattern;
@@ -32,6 +37,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -221,5 +227,50 @@ public class JsonProcessorTest {
         // Assertion
         assertNotNull(deserialized);
         assertEquals(message, deserialized);
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAttributeExchangeRequestMessage() throws SerializationException, UnknownHostException {
+        // Test data
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
+        InetAddress destination = InetAddress.getByName("localhost");
+        DigitalSignature signature = new DigitalSignature(new byte[32], "test");
+        Set<String> attributeIdentifiers = Set.of("ID_1", "ID_2", "ID_3");
+        AttributeExchangeRequestMessage message = new AttributeExchangeRequestMessage(source, destination, signature, attributeIdentifiers);
+
+        // Execution
+        byte[] serialMessage = jsonProcessor.serialize(message);
+        AttributeExchangeRequestMessage deserialMessage = (AttributeExchangeRequestMessage) jsonProcessor.deserialize(serialMessage, AccessControlMessage.class);
+
+        // Assertion
+        assertNotNull(deserialMessage);
+        assertEquals(message, deserialMessage);
+    }
+
+    @Test
+    public void testSerializationAndDeserializationOfAttributeExchangeMessage() throws SerializationException, UnknownHostException {
+        // Test data
+        JsonProcessor jsonProcessor = new JsonProcessor();
+        InetAddress source = InetAddress.getByName("127.0.0.1");
+        InetAddress destination = InetAddress.getByName("localhost");
+        DigitalSignature signature = new DigitalSignature(new byte[32], "test");
+
+        Instant now = Instant.now();
+        Set<PolicyAttribute<?>> attributeIdentifiers = Set.of(
+                new LongAttribute("Long 1", now, now.plusSeconds(60), 1234L),
+                new LongAttribute("Long 2", now, now.plusSeconds(100), 5678L),
+                new StringAttribute("String 1", now, now.plusSeconds(60), "String"),
+                new LongAttribute("Long 3", now, now.plusSeconds(0), 0L)
+        );
+        AttributeExchangeMessage message = new AttributeExchangeMessage(source, destination, signature, attributeIdentifiers);
+
+        // Execution
+        byte[] serialMessage = jsonProcessor.serialize(message);
+        AttributeExchangeMessage deserialMessage = (AttributeExchangeMessage) jsonProcessor.deserialize(serialMessage, AccessControlMessage.class);
+
+        // Assertion
+        assertNotNull(deserialMessage);
+        assertEquals(message, deserialMessage);
     }
 }
