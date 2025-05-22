@@ -3,9 +3,14 @@ package com.gstuer.casc.common.serialization;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.gstuer.casc.common.attribute.LongAttribute;
+import com.gstuer.casc.common.attribute.PolicyAttribute;
+import com.gstuer.casc.common.attribute.StringAttribute;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
+import com.gstuer.casc.common.message.AttributeExchangeMessage;
+import com.gstuer.casc.common.message.AttributeExchangeRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.message.PayloadExchangeMessage;
@@ -39,6 +44,8 @@ public class JsonProcessor {
         // Register custom type adapters to serialize/deserialize objects correctly
         builder.registerTypeAdapter(Packet.class, new PacketSerializer());
         builder.registerTypeAdapter(Instant.class, new InstantSerializer());
+
+        // Type factory for messages
         RuntimeTypeAdapterFactory<?> messageAdapterFactory = RuntimeTypeAdapterFactory
                 .of(AccessControlMessage.class)
                 .registerSubtype(PayloadExchangeMessage.class)
@@ -46,8 +53,12 @@ public class JsonProcessor {
                 .registerSubtype(KeyExchangeRequestMessage.class)
                 .registerSubtype(AccessRequestMessage.class)
                 .registerSubtype(AccessDecisionMessage.class)
+                .registerSubtype(AttributeExchangeMessage.class)
+                .registerSubtype(AttributeExchangeRequestMessage.class)
                 .recognizeSubtypes();
         builder.registerTypeAdapterFactory(messageAdapterFactory);
+
+        // Type factory for flow patterns
         RuntimeTypeAdapterFactory<?> patternAdapterFactory = RuntimeTypeAdapterFactory
                 .of(AccessRequestPattern.class)
                 .registerSubtype(EthernetPattern.class)
@@ -56,6 +67,14 @@ public class JsonProcessor {
                 .registerSubtype(TcpPattern.class)
                 .recognizeSubtypes();
         builder.registerTypeAdapterFactory(patternAdapterFactory);
+
+        // Type factory for attributes
+        RuntimeTypeAdapterFactory<?> attributeAdapterFactory = RuntimeTypeAdapterFactory
+                .of(PolicyAttribute.class)
+                .registerSubtype(LongAttribute.class)
+                .registerSubtype(StringAttribute.class)
+                .recognizeSubtypes();
+        builder.registerTypeAdapterFactory(attributeAdapterFactory);
         this.gson = builder.create();
     }
 
