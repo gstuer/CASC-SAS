@@ -3,11 +3,15 @@ package com.gstuer.casc.common.attribute;
 import com.google.common.primitives.Bytes;
 import com.gstuer.casc.common.cryptography.Signable;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
 public abstract class PolicyAttribute<T> implements Signable, Serializable {
+    @Serial
+    private static final long serialVersionUID = -8322128904857578281L;
+
     private final String identifier;
     private final Instant validFrom;
     private final Instant validUntil;
@@ -50,11 +54,12 @@ public abstract class PolicyAttribute<T> implements Signable, Serializable {
             return false;
         }
         PolicyAttribute<?> that = (PolicyAttribute<?>) object;
-        return Objects.equals(identifier, that.identifier) && Objects.equals(value, that.value);
+        return Objects.equals(identifier, that.identifier) && Objects.equals(validFrom, that.validFrom)
+                && Objects.equals(validUntil, that.validUntil) && Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, value);
+        return Objects.hash(identifier, validFrom, validUntil, value);
     }
 }
