@@ -6,6 +6,7 @@ import com.gstuer.casc.common.attribute.predicate.UnavailableAttributeException;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A {@link PolicyPredicate predicate} mapping exactly one numeric {@link PolicyAttribute attribute} to a boolean value
@@ -47,5 +48,10 @@ public class UnivariateNumericPredicate<T extends Number & Comparable<T>> extend
         } else {
             throw new UnavailableAttributeException("Attribute with identifier \"" + this.identifier + "\"is unavailable.", null);
         }
+    }
+
+    @Override
+    public Set<String> getRequiredAttributeIdentifiers() {
+        return Set.of(identifier);
     }
 }

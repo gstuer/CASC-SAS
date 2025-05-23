@@ -1,6 +1,9 @@
 package com.gstuer.casc.common.attribute.predicate.tree;
 
+import com.google.common.collect.Sets;
 import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
+
+import java.util.Set;
 
 /**
  * Represents a {@link PredicateTree tree of predicates} that uses the logical operators to evaluate its underlying
@@ -21,13 +24,19 @@ public abstract class PredicateTree extends PolicyPredicate {
         this.rightChild = rightChild;
     }
 
+    @Override
+    public Set<String> getRequiredAttributeIdentifiers() {
+        return Sets.union(this.leftChild.getRequiredAttributeIdentifiers(),
+                this.rightChild.getRequiredAttributeIdentifiers());
+    }
+
     /**
      * Gets the first child node of the tree.
      *
      * @return first child node of the tree.
      */
     protected PolicyPredicate getLeftChild() {
-        return leftChild;
+        return this.leftChild;
     }
 
     /**
@@ -36,6 +45,6 @@ public abstract class PredicateTree extends PolicyPredicate {
      * @return second child node of the tree.
      */
     protected PolicyPredicate getRightChild() {
-        return rightChild;
+        return this.rightChild;
     }
 }

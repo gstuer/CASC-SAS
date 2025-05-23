@@ -4,6 +4,7 @@ import com.gstuer.casc.common.attribute.PolicyAttribute;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -19,6 +20,13 @@ public abstract class PolicyPredicate implements Predicate<Map<String, PolicyAtt
      *                                       evaluation of the predicate is not possible.
      */
     public abstract Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) throws UnavailableAttributeException;
+
+    /**
+     * Gets the identifiers of all {@link PolicyAttribute attributes} required for the evaluation of this predicate.
+     *
+     * @return the identifiers of all required {@link PolicyAttribute attributes}.
+     */
+    public abstract Set<String> getRequiredAttributeIdentifiers();
 
     @Override
     public boolean test(Map<String, PolicyAttribute<?>> attributes) {
