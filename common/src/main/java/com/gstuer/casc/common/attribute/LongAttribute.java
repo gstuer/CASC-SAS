@@ -9,7 +9,7 @@ public class LongAttribute extends PolicyAttribute<Long> {
     @Serial
     private static final long serialVersionUID = -2625075482404930676L;
 
-    public LongAttribute(String identifier, Instant validFrom, Instant validUntil, Long value) {
+    public LongAttribute(AttributeIdentifier identifier, Instant validFrom, Instant validUntil, Long value) {
         super(identifier, validFrom, validUntil, value);
     }
 

@@ -1,6 +1,7 @@
 package com.gstuer.casc.common.serialization;
 
 import com.gstuer.casc.common.AccessDecision;
+import com.gstuer.casc.common.attribute.AttributeIdentifier;
 import com.gstuer.casc.common.attribute.LongAttribute;
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 import com.gstuer.casc.common.attribute.StringAttribute;
@@ -236,7 +237,11 @@ public class JsonProcessorTest {
         InetAddress source = InetAddress.getByName("127.0.0.1");
         InetAddress destination = InetAddress.getByName("localhost");
         DigitalSignature signature = new DigitalSignature(new byte[32], "test");
-        Set<String> attributeIdentifiers = Set.of("ID_1", "ID_2", "ID_3");
+        Set<AttributeIdentifier> attributeIdentifiers = Set.of(
+                new AttributeIdentifier("ID_1", source),
+                new AttributeIdentifier("ID_2", source),
+                new AttributeIdentifier("ID_3", source)
+        );
         AttributeExchangeRequestMessage message = new AttributeExchangeRequestMessage(source, destination, signature, attributeIdentifiers);
 
         // Execution
@@ -257,13 +262,13 @@ public class JsonProcessorTest {
         DigitalSignature signature = new DigitalSignature(new byte[32], "test");
 
         Instant now = Instant.now();
-        Set<PolicyAttribute<?>> attributeIdentifiers = Set.of(
-                new LongAttribute("Long 1", now, now.plusSeconds(60), 1234L),
-                new LongAttribute("Long 2", now, now.plusSeconds(100), 5678L),
-                new StringAttribute("String 1", now, now.plusSeconds(60), "String"),
-                new LongAttribute("Long 3", now, now.plusSeconds(0), 0L)
+        Set<PolicyAttribute<?>> attributes = Set.of(
+                new LongAttribute(new AttributeIdentifier("Long 1", source), now, now.plusSeconds(60), 1234L),
+                new LongAttribute(new AttributeIdentifier("Long 2", source), now, now.plusSeconds(100), 5678L),
+                new StringAttribute(new AttributeIdentifier("String 1", source), now, now.plusSeconds(60), "String"),
+                new LongAttribute(new AttributeIdentifier("Long 3", source), now, now.plusSeconds(0), 0L)
         );
-        AttributeExchangeMessage message = new AttributeExchangeMessage(source, destination, signature, attributeIdentifiers);
+        AttributeExchangeMessage message = new AttributeExchangeMessage(source, destination, signature, attributes);
 
         // Execution
         byte[] serialMessage = jsonProcessor.serialize(message);

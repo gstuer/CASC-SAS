@@ -7,7 +7,7 @@ public class StringAttribute extends PolicyAttribute<String> {
     @Serial
     private static final long serialVersionUID = 132124938264322981L;
 
-    public StringAttribute(String identifier, Instant validFrom, Instant validUntil, String value) {
+    public StringAttribute(AttributeIdentifier identifier, Instant validFrom, Instant validUntil, String value) {
         super(identifier, validFrom, validUntil, value);
     }
 

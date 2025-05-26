@@ -1,5 +1,7 @@
 package com.gstuer.casc.common.message;
 
+import com.google.common.primitives.Bytes;
+import com.gstuer.casc.common.attribute.AttributeIdentifier;
 import com.gstuer.casc.common.cryptography.DigitalSignature;
 import com.gstuer.casc.common.cryptography.Signer;
 import com.gstuer.casc.common.serialization.JsonProcessor;
@@ -11,15 +13,15 @@ import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.Set;
 
-public class AttributeExchangeRequestMessage extends AccessControlMessage<Set<String>> {
+public class AttributeExchangeRequestMessage extends AccessControlMessage<Set<AttributeIdentifier>> {
     @Serial
     private static final long serialVersionUID = 1806760682714942195L;
 
-    public AttributeExchangeRequestMessage(InetAddress source, InetAddress destination, DigitalSignature signature, Set<String> identifiers) {
+    public AttributeExchangeRequestMessage(InetAddress source, InetAddress destination, DigitalSignature signature, Set<AttributeIdentifier> identifiers) {
         super(source, destination, signature, identifiers);
     }
 
-    public AttributeExchangeRequestMessage(InetAddress destination, DigitalSignature signature, Set<String> identifiers) {
+    public AttributeExchangeRequestMessage(InetAddress destination, DigitalSignature signature, Set<AttributeIdentifier> identifiers) {
         super(destination, signature, identifiers);
     }
 
@@ -37,9 +39,9 @@ public class AttributeExchangeRequestMessage extends AccessControlMessage<Set<St
     @Override
     public byte[] getSigningData() {
         return this.getPayload().parallelStream()
-                .reduce(String::concat)
-                .orElse("")
-                .getBytes(JsonProcessor.getDefaultCharset());
+                .map(AttributeIdentifier::getSigningData)
+                .reduce(Bytes::concat)
+                .orElse(new byte[0]);
     }
 
     @Override

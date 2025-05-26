@@ -1,6 +1,7 @@
 package com.gstuer.casc.common.attribute;
 
 import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Longs;
 import com.gstuer.casc.common.cryptography.Signable;
 
 import java.io.Serial;
@@ -12,19 +13,19 @@ public abstract class PolicyAttribute<T> implements Signable, Serializable {
     @Serial
     private static final long serialVersionUID = -8322128904857578281L;
 
-    private final String identifier;
+    private final AttributeIdentifier identifier;
     private final Instant validFrom;
     private final Instant validUntil;
     private final T value;
 
-    public PolicyAttribute(String identifier, Instant validFrom, Instant validUntil, T value) {
+    public PolicyAttribute(AttributeIdentifier identifier, Instant validFrom, Instant validUntil, T value) {
         this.identifier = Objects.requireNonNull(identifier);
         this.validFrom = Objects.requireNonNull(validFrom);
         this.validUntil = Objects.requireNonNull(validUntil);
         this.value = Objects.requireNonNull(value);
     }
 
-    public String getIdentifier() {
+    public AttributeIdentifier getIdentifier() {
         return identifier;
     }
 
@@ -44,8 +45,10 @@ public abstract class PolicyAttribute<T> implements Signable, Serializable {
 
     @Override
     public byte[] getSigningData() {
-        byte[] identifierBytes = this.identifier.getBytes();
-        return Bytes.concat(identifierBytes, this.getValueAsBytes());
+        byte[] identifierBytes = Bytes.concat(this.identifier.getName().getBytes(), this.identifier.getProvider().getAddress());
+        byte[] validFromBytes = Longs.toByteArray(this.getValidFrom().toEpochMilli());
+        byte[] validUntilBytes = Longs.toByteArray(this.getValidUntil().toEpochMilli());
+        return Bytes.concat(identifierBytes, validFromBytes, validUntilBytes, this.getValueAsBytes());
     }
 
     @Override
