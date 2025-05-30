@@ -37,6 +37,7 @@ import org.pcap4j.util.MacAddress;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
@@ -263,10 +264,10 @@ public class JsonProcessorTest {
 
         Instant now = Instant.now();
         Set<PolicyAttribute<?>> attributes = Set.of(
-                new LongAttribute(new AttributeIdentifier("Long 1", source), now, now.plusSeconds(60), 1234L),
-                new LongAttribute(new AttributeIdentifier("Long 2", source), now, now.plusSeconds(100), 5678L),
-                new StringAttribute(new AttributeIdentifier("String 1", source), now, now.plusSeconds(60), "String"),
-                new LongAttribute(new AttributeIdentifier("Long 3", source), now, now.plusSeconds(0), 0L)
+                new LongAttribute(new AttributeIdentifier("Long 1", source), now, Duration.ofSeconds(60), 1234L),
+                new LongAttribute(new AttributeIdentifier("Long 2", source), now, Duration.ofSeconds(100), 5678L),
+                new StringAttribute(new AttributeIdentifier("String 1", source), now, Duration.ofSeconds(60), "String"),
+                new LongAttribute(new AttributeIdentifier("Long 3", source), now, Duration.ofSeconds(0), 0L)
         );
         AttributeExchangeMessage message = new AttributeExchangeMessage(source, destination, signature, attributes);
 

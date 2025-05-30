@@ -6,42 +6,88 @@ import com.gstuer.casc.common.cryptography.Signable;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public abstract class PolicyAttribute<T> implements Signable, Serializable {
     @Serial
     private static final long serialVersionUID = -8322128904857578281L;
 
     private final AttributeIdentifier identifier;
-    private final Instant validFrom;
-    private final Instant validUntil;
-    private final T value;
+    private final Duration validityDuration;
+    private Instant validFrom;
+    private T value;
+    private Supplier<T> valueSupplier;
 
-    public PolicyAttribute(AttributeIdentifier identifier, Instant validFrom, Instant validUntil, T value) {
+    public PolicyAttribute(AttributeIdentifier identifier, Instant validFrom, Duration validityDuration, T value) {
         this.identifier = Objects.requireNonNull(identifier);
         this.validFrom = Objects.requireNonNull(validFrom);
-        this.validUntil = Objects.requireNonNull(validUntil);
+        this.validityDuration = Objects.requireNonNull(validityDuration);
         this.value = Objects.requireNonNull(value);
     }
 
+    public PolicyAttribute(AttributeIdentifier identifier, Instant validFrom, Duration validityDuration, Supplier<T> valueSupplier) {
+        this.identifier = Objects.requireNonNull(identifier);
+        this.validFrom = Objects.requireNonNull(validFrom);
+        this.validityDuration = Objects.requireNonNull(validityDuration);
+        this.value = valueSupplier.get();
+        this.valueSupplier = valueSupplier;
+    }
+
     public AttributeIdentifier getIdentifier() {
-        return identifier;
+        return this.identifier;
     }
 
     public Instant getValidFrom() {
-        return validFrom;
+        return this.validFrom;
     }
 
     public Instant getValidUntil() {
-        return validUntil;
+        return this.validFrom.plus(validityDuration);
+    }
+
+    public Duration getValidityDuration() {
+        return this.validityDuration;
     }
 
     public T getValue() {
-        return value;
+        return this.value;
     }
 
     public abstract byte[] getValueAsBytes();
+
+    public void setValueSupplier(Supplier<T> valueSupplier) {
+        this.valueSupplier = valueSupplier;
+    }
+
+    public boolean hasValueSupplier() {
+        return Objects.nonNull(this.valueSupplier);
+    }
+
+    public void update(T value) {
+        this.value = Objects.requireNonNull(value);
+        this.validFrom = Instant.now();
+    }
+
+    public void update() {
+        if (this.valueSupplier == null) {
+            throw new IllegalStateException("Cannot update value without supplier being set.");
+        }
+        this.update(this.valueSupplier.get());
+    }
+
+    /**
+     * Checks whether this attribute is currently valid. An attribute is valid if the current instant is within its
+     * validity period.
+     *
+     * @return {@code true} if the attribute is currently valid, {@code false} otherwise.
+     */
+    public boolean isValid() {
+        Instant now = Instant.now();
+        return now.isAfter(this.getValidFrom()) && now.isBefore(this.getValidUntil());
+    }
 
     @Override
     public byte[] getSigningData() {
@@ -58,11 +104,12 @@ public abstract class PolicyAttribute<T> implements Signable, Serializable {
         }
         PolicyAttribute<?> that = (PolicyAttribute<?>) object;
         return Objects.equals(identifier, that.identifier) && Objects.equals(validFrom, that.validFrom)
-                && Objects.equals(validUntil, that.validUntil) && Objects.equals(value, that.value);
+                && Objects.equals(validityDuration, that.validityDuration) && Objects.equals(value, that.value)
+                && Objects.equals(valueSupplier, that.valueSupplier);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, validFrom, validUntil, value);
+        return Objects.hash(identifier, validFrom, validityDuration, value, valueSupplier);
     }
 }
