@@ -23,6 +23,7 @@ import org.pcap4j.packet.Packet;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 
 public class JsonProcessor {
@@ -44,6 +45,7 @@ public class JsonProcessor {
         // Register custom type adapters to serialize/deserialize objects correctly
         builder.registerTypeAdapter(Packet.class, new PacketSerializer());
         builder.registerTypeAdapter(Instant.class, new InstantSerializer());
+        builder.registerTypeAdapter(Duration.class, new DurationSerializer());
 
         // Type factory for messages
         RuntimeTypeAdapterFactory<?> messageAdapterFactory = RuntimeTypeAdapterFactory
