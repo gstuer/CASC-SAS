@@ -1,5 +1,8 @@
 package com.gstuer.casc.common.attribute;
 
+import com.gstuer.casc.common.AuthenticationClient;
+import com.gstuer.casc.common.cryptography.NoOperationAuthenticator;
+import com.gstuer.casc.common.message.AccessControlMessage;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
@@ -7,6 +10,8 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,7 +21,10 @@ public class AttributePublisherTest {
     public void testUpdaterTiming() throws UnknownHostException, InterruptedException {
         // Test Setup
         Duration validityDuration = Duration.ofMillis(50);
-        AttributePublisher publisher = new AttributePublisher();
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+        BlockingQueue<AccessControlMessage<?>> messageEgress = new LinkedBlockingQueue<>();
+        AuthenticationClient authenticationClient = new AuthenticationClient(address, new NoOperationAuthenticator(), messageEgress);
+        AttributePublisher publisher = new AttributePublisher(authenticationClient, messageEgress);
         InetAddress provider = InetAddress.getByName("127.0.0.1");
         Iterator<Long> longIterator = LongStream.iterate(0, i -> i + 1).iterator();
         LongAttribute attribute = new LongAttribute(new AttributeIdentifier("ID", provider),
@@ -40,7 +48,10 @@ public class AttributePublisherTest {
     public void testUnpublish() throws UnknownHostException, InterruptedException {
         // Test Setup
         Duration validityDuration = Duration.ofMillis(50);
-        AttributePublisher publisher = new AttributePublisher();
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+        BlockingQueue<AccessControlMessage<?>> messageEgress = new LinkedBlockingQueue<>();
+        AuthenticationClient authenticationClient = new AuthenticationClient(address, new NoOperationAuthenticator(), messageEgress);
+        AttributePublisher publisher = new AttributePublisher(authenticationClient, messageEgress);
         InetAddress provider = InetAddress.getByName("127.0.0.1");
         Iterator<Long> longIterator = LongStream.iterate(0, i -> i + 1).iterator();
         LongAttribute attribute = new LongAttribute(new AttributeIdentifier("ID", provider),
