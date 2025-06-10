@@ -1,19 +1,31 @@
 package com.gstuer.casc.common.attribute;
 
+import com.gstuer.casc.common.AuthenticationClient;
+import com.gstuer.casc.common.message.AccessControlMessage;
+import com.gstuer.casc.common.message.AttributeExchangeMessage;
+import com.gstuer.casc.common.message.AttributeExchangeRequestMessage;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AttributePublisher {
     private final ConcurrentMap<AttributeIdentifier, PolicyAttribute<?>> attributes;
     private final ConcurrentMap<AttributeIdentifier, AttributeUpdater> updaters;
+    private final AuthenticationClient authenticationClient;
+    private final BlockingQueue<AccessControlMessage<?>> messageEgress;
 
-    public AttributePublisher() {
+    public AttributePublisher(AuthenticationClient authenticationClient, BlockingQueue<AccessControlMessage<?>> messageEgress) {
         this.attributes = new ConcurrentHashMap<>();
         this.updaters = new ConcurrentHashMap<>();
+        this.authenticationClient = Objects.requireNonNull(authenticationClient);
+        this.messageEgress = Objects.requireNonNull(messageEgress);
     }
 
     public <T> void publish(PolicyAttribute<T> attribute) {
@@ -43,6 +55,16 @@ public class AttributePublisher {
 
     public PolicyAttribute<?> get(AttributeIdentifier identifier) {
         return this.attributes.get(identifier);
+    }
+
+    public void processVerifiedMessage(AttributeExchangeRequestMessage message) {
+        Set<AttributeIdentifier> identifiers = message.getPayload();
+        Set<PolicyAttribute<?>> attributes = identifiers.parallelStream()
+                .map(this::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        AttributeExchangeMessage exchangeMessage = new AttributeExchangeMessage(message.getSource(), null, attributes);
+        authenticationClient.signMessage(exchangeMessage).ifPresent(this.messageEgress::offer);
     }
 
     private static final class AttributeUpdater implements Runnable {
