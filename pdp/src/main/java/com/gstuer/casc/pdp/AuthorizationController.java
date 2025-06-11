@@ -1,5 +1,6 @@
 package com.gstuer.casc.pdp;
 
+import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.AuthenticationClient;
 import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.message.AccessControlMessage;
@@ -7,7 +8,6 @@ import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
-import com.gstuer.casc.common.AccessDecision;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
 import com.gstuer.casc.common.pattern.EthernetPattern;
 import org.pcap4j.packet.namednumber.EtherType;
@@ -61,17 +61,17 @@ public class AuthorizationController {
 
         /* Rules for lab evaluation
         EthernetPattern blueToBlack1Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
-                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP"));
+                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP")); // Parallel Redundancy Protocol (PRP) Supervision Frames
         EthernetPattern blueToBlack2Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
-                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88f7, "Unknown"));
+                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88f7, "Unknown")); // Precision Time Protocol (PTP) over IEEE 802.3 Ethernet
         EthernetPattern blackToBlue1Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
-                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP"));
+                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP")); // Parallel Redundancy Protocol (PRP) Supervision Frames
         EthernetPattern blackToBlue2Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
-                MacAddress.getByName("01:0c:cd:01:01:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+                MacAddress.getByName("01:0c:cd:01:01:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame")); // TODO only let goose/sv pass + deactivate sv bypass
         EthernetPattern blackToBlue3Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
-                MacAddress.getByName("01:80:c2:00:00:00"), new EtherType((short) 0x0027, "Unknown"));
+                MacAddress.getByName("01:80:c2:00:00:00"), new EtherType((short) 0x0027, "Unknown")); // Magic number for spanning tree protocol in 802.3 ethernet frame
         EthernetPattern blackToBlue4Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
-                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88cc, "Unknown"));
+                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88cc, "Unknown")); // Link Layer Discovery Protocol
 
         try {
             AccessDecision blueToBlackDecision1 = new AccessDecision(blueToBlack1Pattern, AccessDecision.Action.GRANT,
