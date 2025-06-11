@@ -38,23 +38,28 @@ public class AuthorizationController {
 
         // TODO Remove static rules
         /* MAC Addresses
-         * - Blueberry  (PEP 192.168.0.60) 00:e0:4c:68:02:40
-         * - Blackberry (PEP 192.168.0.61) 00:e0:4c:68:02:69
+         * - Blueberry  00:e0:4c:68:02:40
+         * - Blackberry 00:e0:4c:68:02:69
+         * - Huckleberry 2c:cf:67:a8:50:a6
+         * - Lingonberry 2c:cf:67:a8:51:24
+         * - Gooseberry 2c:cf:67:a8:51:7e
+         * - Strawberry 2c:cf:67:a8:51:87
+         * - Cranberry 2c:cf:67:a8:51:a8
          */
-        EthernetPattern blueToBlackPattern = new EthernetPattern(MacAddress.getByName("00:e0:4c:68:02:40"),
-                MacAddress.getByName("00:e0:4c:68:02:69"), EtherType.IPV4);
-        EthernetPattern blackToBluePattern = new EthernetPattern(MacAddress.getByName("00:e0:4c:68:02:69"),
-                MacAddress.getByName("00:e0:4c:68:02:40"), EtherType.IPV4);
+        EthernetPattern lingonToGoosePattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:24"),
+                MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
+        EthernetPattern gooseToLingonPattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:7e"),
+                MacAddress.getByName("2c:cf:67:a8:51:24"), EtherType.IPV4);
 
         try {
-            AccessDecision blueToBlackDecision = new AccessDecision(blueToBlackPattern, AccessDecision.Action.GRANT,
+            AccessDecision decisionFirst = new AccessDecision(lingonToGoosePattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(15));
-            AccessDecision blackToBlueDecision = new AccessDecision(blackToBluePattern, AccessDecision.Action.GRANT,
+            AccessDecision decisionSecond = new AccessDecision(gooseToLingonPattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(15));
-            this.accessDecisions.add(blueToBlackDecision);
-            this.accessDecisions.add(blackToBlueDecision);
-            new Thread(new DecisionRefresher(blueToBlackDecision, TimeUnit.SECONDS.toMillis(15))).start();
-            new Thread(new DecisionRefresher(blackToBlueDecision, TimeUnit.SECONDS.toMillis(15))).start();
+            this.accessDecisions.add(decisionFirst);
+            this.accessDecisions.add(decisionSecond);
+            new Thread(new DecisionRefresher(decisionFirst, TimeUnit.SECONDS.toMillis(15))).start();
+            new Thread(new DecisionRefresher(decisionSecond, TimeUnit.SECONDS.toMillis(15))).start();
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
