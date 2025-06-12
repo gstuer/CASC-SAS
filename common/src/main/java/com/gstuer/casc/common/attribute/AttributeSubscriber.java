@@ -8,6 +8,8 @@ import com.gstuer.casc.common.message.AttributeExchangeMessage;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -31,6 +33,11 @@ public class AttributeSubscriber {
     }
 
     public <T> void subscribe(AttributeIdentifier identifier) {
+        if (this.updaters.get(identifier) != null) {
+            // Attribute already subscribed.
+            return;
+        }
+
         // Create and start updater thread for published attribute
         AttributeUpdater updater = new AttributeUpdater(identifier);
         this.updaters.put(identifier, updater);
@@ -58,6 +65,14 @@ public class AttributeSubscriber {
         }
         this.attributes.remove(identifier);
         return null;
+    }
+
+    public Map<AttributeIdentifier, PolicyAttribute<?>> get(Iterable<AttributeIdentifier> identifiers) {
+        Map<AttributeIdentifier, PolicyAttribute<?>> attributes = new HashMap<>();
+        for (AttributeIdentifier identifier : identifiers) {
+            attributes.put(identifier, this.get(identifier));
+        }
+        return attributes;
     }
 
     public void processVerifiedMessage(AttributeExchangeMessage message) {
