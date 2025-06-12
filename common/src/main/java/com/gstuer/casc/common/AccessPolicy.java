@@ -1,5 +1,6 @@
 package com.gstuer.casc.common;
 
+import com.gstuer.casc.common.attribute.AttributeIdentifier;
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
 import com.gstuer.casc.common.attribute.predicate.UnavailableAttributeException;
@@ -48,7 +49,7 @@ public class AccessPolicy {
      * @param attributes a map of non-flow-related system attributes using their identifiers as map keys
      * @return an {@link AccessDecision access decision} derived from this {@link AccessPolicy access policy}.
      */
-    public AccessDecision evaluate(Map<String, PolicyAttribute<?>> attributes) {
+    public AccessDecision evaluate(Map<AttributeIdentifier, PolicyAttribute<?>> attributes) {
         PolicyPredicate.Evaluation evaluation;
         try {
             // Evaluation was possible for current system state
@@ -64,5 +65,21 @@ public class AccessPolicy {
         } else {
             return new AccessDecision(flowPattern, DEFAULT_ACTION, DEFAULT_NEXT_HOP, evaluation.getEndOfValidity());
         }
+    }
+
+    public AccessRequestPattern getFlowPattern() {
+        return this.flowPattern;
+    }
+
+    public AccessDecision.Action getAction() {
+        return this.action;
+    }
+
+    public InetAddress getNextHop() {
+        return this.nextHop;
+    }
+
+    public PolicyPredicate getPredicate() {
+        return this.predicate;
     }
 }

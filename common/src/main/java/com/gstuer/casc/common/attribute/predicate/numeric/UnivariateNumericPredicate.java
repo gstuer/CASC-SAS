@@ -1,9 +1,11 @@
 package com.gstuer.casc.common.attribute.predicate.numeric;
 
+import com.gstuer.casc.common.attribute.AttributeIdentifier;
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
 import com.gstuer.casc.common.attribute.predicate.UnavailableAttributeException;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +17,10 @@ import java.util.Set;
  * @param <T> type of number expected as attribute value
  */
 public class UnivariateNumericPredicate<T extends Number & Comparable<T>> extends PolicyPredicate implements Serializable {
-    private final String identifier;
+    @Serial
+    private static final long serialVersionUID = 5179150213055632712L;
+
+    private final AttributeIdentifier identifier;
     private final NumericOperator<T> operator;
     private final T referenceValue;
 
@@ -26,7 +31,7 @@ public class UnivariateNumericPredicate<T extends Number & Comparable<T>> extend
      * @param operator       the numeric operator to be applied on the attribute's actual value
      * @param referenceValue the value used as reference for the numeric operator
      */
-    public UnivariateNumericPredicate(String identifier, NumericOperator<T> operator, T referenceValue) {
+    public UnivariateNumericPredicate(AttributeIdentifier identifier, NumericOperator<T> operator, T referenceValue) {
         this.identifier = identifier;
         this.operator = operator;
         this.referenceValue = referenceValue;
@@ -34,7 +39,7 @@ public class UnivariateNumericPredicate<T extends Number & Comparable<T>> extend
 
     @Override
     @SuppressWarnings("unchecked")
-    public Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) throws UnavailableAttributeException {
+    public Evaluation evaluate(Map<AttributeIdentifier, PolicyAttribute<?>> attributes) throws UnavailableAttributeException {
         PolicyAttribute<?> attribute = attributes.get(this.identifier);
         if (attribute != null) {
             T testValue;
@@ -51,7 +56,7 @@ public class UnivariateNumericPredicate<T extends Number & Comparable<T>> extend
     }
 
     @Override
-    public Set<String> getRequiredAttributeIdentifiers() {
+    public Set<AttributeIdentifier> getRequiredAttributeIdentifiers() {
         return Set.of(identifier);
     }
 }

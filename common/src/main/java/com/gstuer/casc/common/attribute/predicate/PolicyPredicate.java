@@ -1,5 +1,6 @@
 package com.gstuer.casc.common.attribute.predicate;
 
+import com.gstuer.casc.common.attribute.AttributeIdentifier;
 import com.gstuer.casc.common.attribute.PolicyAttribute;
 
 import java.time.Instant;
@@ -10,7 +11,7 @@ import java.util.function.Predicate;
 /**
  * Represents a function that maps a single or multiple {@link PolicyAttribute attributes} to a boolean value.
  */
-public abstract class PolicyPredicate implements Predicate<Map<String, PolicyAttribute<?>>> {
+public abstract class PolicyPredicate implements Predicate<Map<AttributeIdentifier, PolicyAttribute<?>>> {
     /**
      * Signals whether a set of non-flow-related system attributes satisfy this predicate.
      *
@@ -19,17 +20,17 @@ public abstract class PolicyPredicate implements Predicate<Map<String, PolicyAtt
      * @throws UnavailableAttributeException signals that the value of an attribute is unavailable and, thus, the
      *                                       evaluation of the predicate is not possible.
      */
-    public abstract Evaluation evaluate(Map<String, PolicyAttribute<?>> attributes) throws UnavailableAttributeException;
+    public abstract Evaluation evaluate(Map<AttributeIdentifier, PolicyAttribute<?>> attributes) throws UnavailableAttributeException;
 
     /**
      * Gets the identifiers of all {@link PolicyAttribute attributes} required for the evaluation of this predicate.
      *
      * @return the identifiers of all required {@link PolicyAttribute attributes}.
      */
-    public abstract Set<String> getRequiredAttributeIdentifiers();
+    public abstract Set<AttributeIdentifier> getRequiredAttributeIdentifiers();
 
     @Override
-    public boolean test(Map<String, PolicyAttribute<?>> attributes) {
+    public boolean test(Map<AttributeIdentifier, PolicyAttribute<?>> attributes) {
         try {
             return this.evaluate(attributes).isPositive();
         } catch (UnavailableAttributeException exception) {
