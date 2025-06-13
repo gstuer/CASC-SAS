@@ -5,7 +5,11 @@ import com.gstuer.casc.common.cryptography.AuthenticatorFactory;
 import com.gstuer.casc.pep.forwarding.ForwardingBridge;
 import com.gstuer.casc.pep.predicate.ArpPredicate;
 import com.gstuer.casc.pep.predicate.IcmpV4Predicate;
+import com.gstuer.casc.pep.predicate.LldpPredicate;
+import com.gstuer.casc.pep.predicate.PrpPredicate;
+import com.gstuer.casc.pep.predicate.PtpPredicate;
 import com.gstuer.casc.pep.predicate.SshOverTcpPredicate;
+import com.gstuer.casc.pep.predicate.StpPredicate;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -116,7 +120,9 @@ public class App {
             // Start forwarding traffic between the specified interfaces using a secured network bridge instance
             System.out.printf("Supervisory Mode: %s <-> %s\n", insecureNetworkInterface.getName(), secureNetworkInterface.getName());
             NetworkBridge networkBridge = new NetworkBridge(insecureNetworkInterface, secureNetworkInterface,
-                    authorizationAuthority, authenticationAuthority, authenticator, new ArpPredicate(), new IcmpV4Predicate(), new SshOverTcpPredicate());
+                    authorizationAuthority, authenticationAuthority, authenticator, new ArpPredicate(),
+                    new IcmpV4Predicate(), new LldpPredicate(), new PtpPredicate(), new PrpPredicate(),
+                    new StpPredicate(), new SshOverTcpPredicate());
             networkBridge.open();
         }
     }
