@@ -1,11 +1,16 @@
 package com.gstuer.casc.pdp;
 
 import com.gstuer.casc.common.AccessDecision;
+import com.gstuer.casc.common.AccessPolicy;
 import com.gstuer.casc.common.AuthenticationClient;
+import com.gstuer.casc.common.attribute.AttributeSubscriber;
+import com.gstuer.casc.common.attribute.predicate.PolicyPredicate;
+import com.gstuer.casc.common.attribute.predicate.StaticResultPredicate;
 import com.gstuer.casc.common.cryptography.Authenticator;
 import com.gstuer.casc.common.message.AccessControlMessage;
 import com.gstuer.casc.common.message.AccessDecisionMessage;
 import com.gstuer.casc.common.message.AccessRequestMessage;
+import com.gstuer.casc.common.message.AttributeExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeMessage;
 import com.gstuer.casc.common.message.KeyExchangeRequestMessage;
 import com.gstuer.casc.common.pattern.AccessRequestPattern;
@@ -15,26 +20,23 @@ import org.pcap4j.util.MacAddress;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.time.Instant;
-import java.util.Objects;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 
 public class AuthorizationController {
-    private static final long FALLBACK_DENY_VALIDITY_MILLISECONDS = TimeUnit.SECONDS.toMillis(60);
-
     private final AuthenticationClient authenticationClient;
-    private final SortedSet<AccessDecision> accessDecisions;
     private final BlockingQueue<AccessControlMessage<?>> egressQueue;
+    private final AttributeSubscriber attributeSubscriber;
+    private final EvaluationManager evaluationManager;
 
     public AuthorizationController(BlockingQueue<AccessControlMessage<?>> egressQueue,
                                    InetAddress authenticationAuthority, Authenticator<?, ?> authenticator) {
-        this.accessDecisions = new ConcurrentSkipListSet<>();
         this.egressQueue = egressQueue;
         this.authenticationClient = new AuthenticationClient(authenticationAuthority, authenticator, this.egressQueue);
+        this.attributeSubscriber = new AttributeSubscriber(this.authenticationClient, this.egressQueue);
+        this.evaluationManager = new EvaluationManager(attributeSubscriber);
 
         // TODO Remove static rules
         /* MAC Addresses
@@ -50,16 +52,14 @@ public class AuthorizationController {
                 MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
         EthernetPattern gooseToLingonPattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:7e"),
                 MacAddress.getByName("2c:cf:67:a8:51:24"), EtherType.IPV4);
-
+        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
         try {
-            AccessDecision decisionFirst = new AccessDecision(lingonToGoosePattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(15));
-            AccessDecision decisionSecond = new AccessDecision(gooseToLingonPattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(15));
-            this.accessDecisions.add(decisionFirst);
-            this.accessDecisions.add(decisionSecond);
-            new Thread(new DecisionRefresher(decisionFirst, TimeUnit.SECONDS.toMillis(15))).start();
-            new Thread(new DecisionRefresher(decisionSecond, TimeUnit.SECONDS.toMillis(15))).start();
+            AccessPolicy lingonToGoosePolicy = new AccessPolicy(lingonToGoosePattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), predicate);
+            AccessPolicy gooseToLingonPolicy = new AccessPolicy(gooseToLingonPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), predicate);
+            this.evaluationManager.addPolicy(lingonToGoosePolicy);
+            this.evaluationManager.addPolicy(gooseToLingonPolicy);
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
@@ -118,6 +118,13 @@ public class AuthorizationController {
         } else if (accessControlMessage instanceof KeyExchangeRequestMessage message) {
             // Forward message to authentication manager for processing
             this.authenticationClient.processMessage(message);
+        } else if (accessControlMessage instanceof AttributeExchangeMessage message) {
+            // Verify message signature
+            if (!this.authenticationClient.verifyMessage(message)) {
+                return;
+            }
+            // Forward message to attribute subscriber for processing
+            this.attributeSubscriber.processVerifiedMessage(message);
         } else if (accessControlMessage instanceof AccessRequestMessage message) {
             // Verify signature
             if (!this.authenticationClient.verifyMessage(message)) {
@@ -126,26 +133,14 @@ public class AuthorizationController {
 
             // Get matching decisions for message
             AccessRequestPattern pattern = message.getPayload();
-            Optional<AccessDecision> optionalMatchingDecision = this.accessDecisions.stream().parallel()
-                    .filter(decision -> pattern.contains(decision.getPattern()) && decision.isValid()).findFirst();
+            AccessDecision decision = this.evaluationManager.getDecision(pattern);
 
-            // Fallback to deny if no decision fits
-            if (optionalMatchingDecision.isEmpty()) {
-                AccessDecision decision = new AccessDecision(pattern, AccessDecision.Action.DENY,
-                        null, Instant.now().plusMillis(FALLBACK_DENY_VALIDITY_MILLISECONDS));
-                AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, decision);
-                authenticationClient.signMessage(decisionMessage).ifPresent(this.egressQueue::offer);
-                System.out.println("[PDP] Deny: No match.");
-                return;
-            }
-
-            AccessDecision decision = optionalMatchingDecision.get();
             // Send decision to next hop if granted
             if (decision.isGranting()) {
                 AccessDecisionMessage decisionMessage = new AccessDecisionMessage(decision.getNextHop(), null, decision);
-                Optional<AccessControlMessage<?>> optionalDecisionMessage = authenticationClient.signMessage(decisionMessage);
-                if (optionalDecisionMessage.isPresent()) {
-                    this.egressQueue.offer(optionalDecisionMessage.get());
+                Optional<AccessControlMessage<?>> optionalSignedMessage = authenticationClient.signMessage(decisionMessage);
+                if (optionalSignedMessage.isPresent()) {
+                    this.egressQueue.offer(optionalSignedMessage.get());
                 } else {
                     System.out.println("[PDP] Signing failed.");
                     return;
@@ -154,50 +149,20 @@ public class AuthorizationController {
 
             // Send decision to requester
             AccessDecisionMessage decisionMessage = new AccessDecisionMessage(message.getSource(), null, decision);
-            Optional<AccessControlMessage<?>> optionalDecisionMessage = authenticationClient.signMessage(decisionMessage);
-            if (optionalDecisionMessage.isPresent()) {
-                this.egressQueue.offer(optionalDecisionMessage.get());
-                System.out.printf("[PDP] Grant: %s -> %s. (took %d ms)\n", message.getSource(), decision.getNextHop(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - arrivalTime));
-
+            Optional<AccessControlMessage<?>> optionalSignedMessage = authenticationClient.signMessage(decisionMessage);
+            if (optionalSignedMessage.isPresent()) {
+                this.egressQueue.offer(optionalSignedMessage.get());
+                if (decision.isGranting()) {
+                    System.out.printf("[PDP] Grant: %s -> %s. (took %d µs)\n", message.getSource(), decision.getNextHop(), TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - arrivalTime));
+                } else {
+                    System.out.printf("[PDP] Deny: %s. (took %d µs)\n", message.getSource(), TimeUnit.NANOSECONDS.toMicros(System.nanoTime() - arrivalTime));
+                }
             } else {
                 System.out.println("[PDP] Signing failed.");
                 return;
             }
         } else {
             System.out.println("[PDP] Unknown message type.");
-        }
-    }
-
-    private final class DecisionRefresher implements Runnable {
-        private final static long REFRESH_THRESHOLD = 50;
-        private final static long SLEEP_OFFSET = 30;
-        private final long validityMilliseconds;
-        private AccessDecision decision;
-
-        private DecisionRefresher(AccessDecision decision, long validityMilliseconds) {
-            this.decision = Objects.requireNonNull(decision);
-            this.validityMilliseconds = validityMilliseconds;
-        }
-
-        @Override
-        public void run() {
-            System.out.println("[PDP] Starting refresh thread.");
-            while (true) {
-                long timeLeft = Instant.now().until(decision.getValidUntil(), TimeUnit.MILLISECONDS.toChronoUnit());
-                if (timeLeft < REFRESH_THRESHOLD) {
-                    AccessDecision renewDecision = new AccessDecision(decision.getPattern(), decision.getAction(),
-                            decision.getNextHop(), Instant.now().plusMillis(this.validityMilliseconds));
-                    AuthorizationController.this.accessDecisions.remove(this.decision);
-                    AuthorizationController.this.accessDecisions.add(renewDecision);
-                    this.decision = renewDecision;
-                    continue;
-                }
-                try {
-                    Thread.sleep(timeLeft - SLEEP_OFFSET);
-                } catch (InterruptedException exception) {
-                    break;
-                }
-            }
         }
     }
 }
