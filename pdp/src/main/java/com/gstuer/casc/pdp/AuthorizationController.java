@@ -48,6 +48,8 @@ public class AuthorizationController {
          * - Strawberry 2c:cf:67:a8:51:87
          * - Cranberry 2c:cf:67:a8:51:a8
          */
+
+        // Rules for office benchmarking
         EthernetPattern lingonToGoosePattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:24"),
                 MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
         EthernetPattern gooseToLingonPattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:7e"),
@@ -64,45 +66,83 @@ public class AuthorizationController {
             throw new IllegalStateException(exception);
         }
 
-        /* Rules for lab evaluation
-        EthernetPattern blueToBlack1Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
-                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP")); // Parallel Redundancy Protocol (PRP) Supervision Frames
-        EthernetPattern blueToBlack2Pattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:ef:b8"),
-                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88f7, "Unknown")); // Precision Time Protocol (PTP) over IEEE 802.3 Ethernet
-        EthernetPattern blackToBlue1Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
-                MacAddress.getByName("01:15:4e:00:01:00"), new EtherType((short) 0x88fb, "PRP")); // Parallel Redundancy Protocol (PRP) Supervision Frames
-        EthernetPattern blackToBlue2Pattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
-                MacAddress.getByName("01:0c:cd:01:01:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame")); // TODO only let goose/sv pass + deactivate sv bypass
-        EthernetPattern blackToBlue3Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
-                MacAddress.getByName("01:80:c2:00:00:00"), new EtherType((short) 0x0027, "Unknown")); // Magic number for spanning tree protocol in 802.3 ethernet frame
-        EthernetPattern blackToBlue4Pattern = new EthernetPattern(MacAddress.getByName("a0:b0:86:4e:d6:37"),
-                MacAddress.getByName("01:80:c2:00:00:0e"), new EtherType((short) 0x88cc, "Unknown")); // Link Layer Discovery Protocol
-
+        /*
+        // Rules for lab evaluation - Subsystem 2 - Siemens-only (6MU85 + 7SX85 + 6MD84)
+        // TODO only let goose/sv pass + deactivate sv bypass
+        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
         try {
-            AccessDecision blueToBlackDecision1 = new AccessDecision(blueToBlack1Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(10));
-            AccessDecision blueToBlackDecision2 = new AccessDecision(blueToBlack2Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.61"), Instant.now().plusSeconds(10));
-            AccessDecision blackToBlueDecision1 = new AccessDecision(blackToBlue1Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
-            AccessDecision blackToBlueDecision2 = new AccessDecision(blackToBlue2Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
-            AccessDecision blackToBlueDecision3 = new AccessDecision(blackToBlue3Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
-            AccessDecision blackToBlueDecision4 = new AccessDecision(blackToBlue4Pattern, AccessDecision.Action.GRANT,
-                    InetAddress.getByName("192.168.0.60"), Instant.now().plusSeconds(10));
-            this.accessDecisions.add(blueToBlackDecision1);
-            this.accessDecisions.add(blueToBlackDecision2);
-            this.accessDecisions.add(blackToBlueDecision1);
-            this.accessDecisions.add(blackToBlueDecision2);
-            this.accessDecisions.add(blackToBlueDecision3);
-            this.accessDecisions.add(blackToBlueDecision4);
-            new Thread(new DecisionRefresher(blueToBlackDecision1, TimeUnit.SECONDS.toMillis(10))).start();
-            new Thread(new DecisionRefresher(blueToBlackDecision2, TimeUnit.SECONDS.toMillis(10))).start();
-            new Thread(new DecisionRefresher(blackToBlueDecision1, TimeUnit.SECONDS.toMillis(10))).start();
-            new Thread(new DecisionRefresher(blackToBlueDecision2, TimeUnit.SECONDS.toMillis(10))).start();
-            new Thread(new DecisionRefresher(blackToBlueDecision3, TimeUnit.SECONDS.toMillis(10))).start();
-            new Thread(new DecisionRefresher(blackToBlueDecision4, TimeUnit.SECONDS.toMillis(10))).start();
+            // Siemens Devices Subsys. MAC Addresses
+            // MU b4:b1:5a:1e:7d:d9
+            // IED b4:b1:5a:1e:87:81
+            // IO unknown
+
+            // Policy for MU to IED via SV
+            EthernetPattern muToIedPattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:7d:d9"),
+                    MacAddress.getByName("01:0c:cd:01:00:04"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy muToIedPolicy = new AccessPolicy(muToIedPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), predicate);
+            this.evaluationManager.addPolicy(muToIedPolicy);
+
+            // Policy for IED to IO-Box via GOOSE
+            EthernetPattern iedToIoPattern = new EthernetPattern(MacAddress.getByName("b4:b1:5a:1e:87:81"),
+                    MacAddress.getByName("01:0c:cd:01:00:03"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy iedToIoPolicy = new AccessPolicy(iedToIoPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), predicate);
+            this.evaluationManager.addPolicy(iedToIoPolicy);
+        } catch (UnknownHostException exception) {
+            throw new IllegalStateException(exception);
+        }
+        */
+
+        /*
+        // Rules for lab evaluation - Subsystem 2 - GE MU320 + GE F60 + Siemens 6MD84
+        // TODO only let goose/sv pass + deactivate sv bypass
+        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
+        try {
+            // MU320 f8:02:78:10:62:a5
+            // IED dc:37:52:0a:0a:1d
+            // IO unknown
+
+            // Policy for MU to IED via SV
+            EthernetPattern muToIedPattern = new EthernetPattern(MacAddress.getByName("f8:02:78:10:62:a5"),
+                    MacAddress.getByName("01:0c:cd:01:00:00"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy muToIedPolicy = new AccessPolicy(muToIedPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), predicate);
+            this.evaluationManager.addPolicy(muToIedPolicy);
+
+            // Policy for IED to IO-Box via GOOSE
+            EthernetPattern iedToIoPattern = new EthernetPattern(MacAddress.getByName("dc:37:52:0a:0a:1d"),
+                    MacAddress.getByName("01:0c:cd:01:02:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy iedToIoPolicy = new AccessPolicy(iedToIoPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), predicate);
+            this.evaluationManager.addPolicy(iedToIoPolicy);
+        } catch (UnknownHostException exception) {
+            throw new IllegalStateException(exception);
+        }
+        */
+
+        /*
+        // Rules for lab evaluation - Subsystem 2 - SEL401 + Hitachi Rel670 + Siemens 6MD84
+        // TODO only let goose/sv pass + deactivate sv bypass
+        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
+        try {
+            // MU 00:30:a7:30:b4:5b
+            // IED REL670 00:02:a3:e2:9d:c1
+            // IO unknown
+
+            // Policy for MU to IED via SV
+            EthernetPattern muToIedPattern = new EthernetPattern(MacAddress.getByName("00:30:a7:30:b4:5b"),
+                    MacAddress.getByName("01:0c:cd:01:00:13"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy muToIedPolicy = new AccessPolicy(muToIedPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), predicate);
+            this.evaluationManager.addPolicy(muToIedPolicy);
+
+            // Policy for IED to IO-Box via GOOSE
+            EthernetPattern iedToIoPattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
+                    MacAddress.getByName("01:0c:cd:01:01:02"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            AccessPolicy iedToIoPolicy = new AccessPolicy(iedToIoPattern, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.60"), predicate);
+            this.evaluationManager.addPolicy(iedToIoPolicy);
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
