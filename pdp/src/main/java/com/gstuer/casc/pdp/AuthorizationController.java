@@ -54,7 +54,7 @@ public class AuthorizationController {
                 MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
         EthernetPattern gooseToLingonPattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:7e"),
                 MacAddress.getByName("2c:cf:67:a8:51:24"), EtherType.IPV4);
-        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
+        PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofMinutes(10));
         try {
             AccessPolicy lingonToGoosePolicy = new AccessPolicy(lingonToGoosePattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.61"), predicate);
