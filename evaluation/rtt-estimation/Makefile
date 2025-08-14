@@ -1,17 +1,15 @@
-ip_passive = 192.168.0.50
-ip_active = 192.168.0.51
+ip_passive = 192.168.0.61
+ip_active = 192.168.0.60
 host_passive = pi@$(ip_passive)
 host_active = pi@$(ip_active)
 port = 8000
 readings = 10000
 
-root = ~
 sources_local = ./
-sources = $(root)/rtt-estimation
+sources = ~/rtt-estimation
 
 executable_passive = python $(sources)/PassiveEntity.py $(port)
-executable_active = python $(sources)/ActiveEntity.py $(ip_passive) $(port) $(readings)
-output = $(sources)/output
+executable_active = python $(sources)/ActiveEntity.py $(ip_passive) $(port) $(readings) 
 process = rtt-estimation
 
 copy:
@@ -25,13 +23,7 @@ clean:
 	ssh $(host_active) "rm -r $(sources)"
 
 run:
-	ssh $(host_passive) "exec -a $(process) $(executable_passive) --- &>> $(output) & disown"
-	ssh $(host_active) "exec -a $(process) $(executable_active) --- &>> $(output)"
-
-stop:
-	-ssh $(host_passive) "pkill -f $(process)"
-	-ssh $(host_active) "pkill -f $(process)"
-
-status:
-	-ssh $(host_passive) "cat $(output)"
-	-ssh $(host_active) "cat $(output)"
+	ssh $(host_passive) "$(executable_passive) &> /dev/null &"
+	-ssh $(host_active) "$(executable_active) tmp"
+	-scp $(host_active):~/tmp.json ./
+	-ssh $(host_passive) "pkill -f PassiveEntity.py"
