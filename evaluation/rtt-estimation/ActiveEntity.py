@@ -11,7 +11,7 @@ class ActiveEntity(Entity, Communicator):
         Communicator.__init__(self, port)
         self.destination = destination
 
-    def estimateRoundTripTime(self, readings, initializationPackets = 5, initializationThreshold = 0.8, intermessageTimeout = 0, receiveTimeout = 1.5, preInitializationTimeout = 0, postInitializationTimeout = 0):
+    def estimateRoundTripTime(self, readings, initializationPackets = 5, initializationThreshold = 0.8, intermessageTimeout = 0, receiveTimeout = 5.0, preInitializationTimeout = 0, postInitializationTimeout = 0):
         # Wait until passive entity is ready
         time.sleep(preInitializationTimeout)
 
@@ -76,8 +76,9 @@ if __name__ == "__main__":
         minMaxRange = maxTime - minTime
         minMaxMidRange = (minTime + maxTime) / 2
         lowLatencyReadings = sum(1 for time in roundTripTimes if time <= 6)
-        mediumLatencyReadings = sum(1 for time in roundTripTimes if time <= 20)
-        highLatencyReadings = sum(1 for time in roundTripTimes if time <= 500)
+        mediumLatencyReadings = sum(1 for time in roundTripTimes if time <= 40)
+        highLatencyReadings = sum(1 for time in roundTripTimes if time <= 200)
+        vertHighLatencyReadings = sum(1 for time in roundTripTimes if time <= 1000)
         printTimed(f"Estimation successful.\nMin:{minTime}ms Max:{maxTime}ms Avg:{meanTime}ms Lost:{lost} PPS:{pps}")
 
         # Combine data for output file
@@ -94,6 +95,7 @@ if __name__ == "__main__":
         "lowLatencyReadings": lowLatencyReadings,
         "mediumLatencyReadings": mediumLatencyReadings,
         "highLatencyReadings": highLatencyReadings,
+        "veryHighLatencyReadings": vertHighLatencyReadings,
         "roundTripTimes": roundTripTimes}
         with open("./" + label + ".json", "w") as file:
             json.dump(estimation, file)
