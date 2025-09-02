@@ -49,6 +49,7 @@ public class AuthorizationController {
          * - Cranberry 2c:cf:67:a8:51:a8
          */
 
+        /*
         // Rules for office benchmarking
         EthernetPattern lingonToGoosePattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:24"),
                 MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
@@ -65,6 +66,7 @@ public class AuthorizationController {
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
+         */
 
         /*
         // Rules for lab evaluation - Subsystem 2 - Siemens-only (6MU85 + 7SX85 + 6MD84)
@@ -121,7 +123,6 @@ public class AuthorizationController {
         }
         */
 
-        /*
         // Rules for lab evaluation - Subsystem 2 - SEL401 + Hitachi Rel670 + Siemens 6MD84
         // TODO only let goose/sv pass + deactivate sv bypass
         PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
@@ -133,9 +134,14 @@ public class AuthorizationController {
             // Policy for MU to IED via SV
             EthernetPattern muToIedPattern = new EthernetPattern(MacAddress.getByName("00:30:a7:30:b4:5b"),
                     MacAddress.getByName("01:0c:cd:01:00:13"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
+            EthernetPattern muToIedPattern2 = new EthernetPattern(MacAddress.getByName("00:30:a7:30:b4:5c"),
+                    MacAddress.getByName("01:0c:cd:04:02:01"), new EtherType((short) 0x8100, "VLAN Tagged Frame"));
             AccessPolicy muToIedPolicy = new AccessPolicy(muToIedPattern, AccessDecision.Action.GRANT,
                     InetAddress.getByName("192.168.0.61"), predicate);
+            AccessPolicy muToIedPolicy2 = new AccessPolicy(muToIedPattern2, AccessDecision.Action.GRANT,
+                    InetAddress.getByName("192.168.0.61"), predicate);
             this.evaluationManager.addPolicy(muToIedPolicy);
+            this.evaluationManager.addPolicy(muToIedPolicy2);
 
             // Policy for IED to IO-Box via GOOSE
             EthernetPattern iedToIoPattern = new EthernetPattern(MacAddress.getByName("00:02:a3:e2:9d:c1"),
@@ -146,7 +152,6 @@ public class AuthorizationController {
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
-        */
     }
 
     public void handleRequest(AccessControlMessage<?> accessControlMessage) {
