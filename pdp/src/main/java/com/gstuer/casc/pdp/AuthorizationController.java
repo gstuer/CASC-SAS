@@ -49,7 +49,6 @@ public class AuthorizationController {
          * - Cranberry 2c:cf:67:a8:51:a8
          */
 
-        /*
         // Rules for office benchmarking
         EthernetPattern lingonToGoosePattern = new EthernetPattern(MacAddress.getByName("2c:cf:67:a8:51:24"),
                 MacAddress.getByName("2c:cf:67:a8:51:7e"), EtherType.IPV4);
@@ -66,7 +65,6 @@ public class AuthorizationController {
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
-         */
 
         /*
         // Rules for lab evaluation - Subsystem 2 - Siemens-only (6MU85 + 7SX85 + 6MD84)
@@ -125,6 +123,7 @@ public class AuthorizationController {
 
         // Rules for lab evaluation - Subsystem 2 - SEL401 + Hitachi Rel670 + Siemens 6MD84
         // TODO only let goose/sv pass + deactivate sv bypass
+        /*
         PolicyPredicate predicate = new StaticResultPredicate(true, Duration.ofSeconds(15));
         try {
             // MU 00:30:a7:30:b4:5b
@@ -152,6 +151,7 @@ public class AuthorizationController {
         } catch (UnknownHostException exception) {
             throw new IllegalStateException(exception);
         }
+         */
     }
 
     public void handleRequest(AccessControlMessage<?> accessControlMessage) {
