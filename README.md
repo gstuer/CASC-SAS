@@ -43,6 +43,8 @@ Each run of the performance analysis is represented by a result file in the JSON
 
 ## Publications
 - Moritz Gstür. 2025. Certificateless Attribute-Based Server-Aided Cryptosystem for Substation Automation Systems
-(CASC-SAS). Master’s thesis. Karlsruher Institut für Technologie (KIT). doi:10.5445/IR/1000182038
+(CASC-SAS). Master’s thesis. Karlsruher Institut für Technologie (KIT). doi:[10.5445/IR/1000182038](https://doi.org/10.5445/IR/1000182038)
+
+- Moritz Gstür, Gustav Keppler, Mohammed Ramadan, Ghada Elbez, and Veit Hagenmeyer. 2026. RTS-ABAC: Real-Time Server-Aided Attribute-Based Authorization & Access Control for Substation Automation Systems. arXiv preprint. doi:[10.48550/arXiv.2603.23012](https://doi.org/10.48550/arXiv.2603.23012)
 
 - More are already in progress...
